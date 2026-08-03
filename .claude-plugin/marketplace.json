@@ -1,0 +1,17 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "sujit-marketplace",
+  "description": "Sujit's personal Claude Code plugins",
+  "owner": {
+    "name": "Sujit Kamthe"
+  },
+  "plugins": [
+    {
+      "name": "dev-flow",
+      "description": "End-to-end dev workflow grounded in Sujit's coding principles: plan, implement, parallel adversarial review, browser test, handover, finalize",
+      "source": "./plugins/dev-flow",
+      "category": "development",
+      "version": "0.1.0"
+    }
+  ]
+}

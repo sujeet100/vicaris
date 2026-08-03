@@ -1,0 +1,8 @@
+{
+  "name": "dev-flow",
+  "description": "End-to-end dev workflow grounded in Sujit's coding principles: plan (fable) -> implement (opus, auto) -> parallel adversarial review (PO / clean-code / design) -> browser test -> handover -> finalize + MR review",
+  "version": "0.1.0",
+  "author": {
+    "name": "Sujit Kamthe"
+  }
+}
