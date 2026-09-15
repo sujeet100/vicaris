@@ -19,10 +19,11 @@ assumption, pinging Slack only on a genuine external blocker.
 ```
 
 Each stage is also a standalone skill: `/plan`, `/implement`,
-`/adversarial-review`, `/test`, `/handover`, `/finalize`. A `/de-ai` skill
-rewrites any drafted prose so it stops reading as AI-generated (flowing,
-connected sentences over choppy staccato); the doc-generating stages run it
-automatically.
+`/adversarial-review`, `/test`, `/handover`, `/finalize`.
+
+Prose cleanup lives in the separate `byline` plugin, which owns `/de-ai` and the
+writing-voice skills. `dev-flow` works without it; the doc-generating stages
+apply a short inline prose bar and defer to `/de-ai` when it is available.
 
 ## The references
 

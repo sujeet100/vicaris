@@ -34,9 +34,11 @@ it in one place. Scannable sections:
   worked, and what didn't (with evidence). Carry over the testing results from
   the test stage verbatim rather than re-summarising loosely.
 
-Before saving, run the `de-ai` pass over the doc's prose (see the `de-ai`
-skill and `references/de-ai-guide.md`): flowing connected sentences, no em
-dashes, no "it's not X, it's Y," no forced trios, no puffery.
+Before saving, clean up the doc's prose: flowing connected sentences that each
+follow from the last, varied sentence length, no em dashes, no "it's not X, it's
+Y," no forced trios, no puffery, and no one-sentence paragraphs that belong in the
+paragraph above. If the `byline` plugin is installed, run `/de-ai` over the doc
+instead — it applies the full standard and measures the result.
 
 ## Step 2 — Create + announce an MR for every repo
 

@@ -58,6 +58,6 @@ for a while (a big implement, a slow eval), say so when it starts.
   query params.
 - **Walls of text.** No diffs, no full findings lists, no stack traces. Link or
   cite the path instead.
-- **AI-writing tells.** Draft anything Sujit reads in his own voice (see the
-  `my-voice` skill and `references/de-ai-guide.md`). Status pings stay clipped and
-  factual; that's fine and expected.
+- **AI-writing tells.** Draft anything Sujit reads in his own voice (the
+  `my-voice` skill in the `byline` plugin, if installed). Status pings stay
+  clipped and factual; that's fine and expected.
