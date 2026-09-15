@@ -1,0 +1,35 @@
+{
+  "description": "Enforces dev-flow's handover discipline at the one point the harness can detect a full context window (PreCompact), and re-injects the run's repo manifest and handover path after a compaction or resume (SessionStart). Both fail open and say nothing outside a dev-flow run.",
+  "hooks": {
+    "PreCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/handlers/precompact-handover-guard.sh\""
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/handlers/session-start-resume.sh\""
+          }
+        ]
+      },
+      {
+        "matcher": "resume",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/handlers/session-start-resume.sh\""
+          }
+        ]
+      }
+    ]
+  }
+}

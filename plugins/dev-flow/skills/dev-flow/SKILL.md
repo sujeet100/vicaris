@@ -50,6 +50,10 @@ skill sequences them.
 - **Push back in the record, not by pausing.** If a requested approach is
   wrong, implement the defensible version and flag the disagreement (with the
   alternative) in the completion doc.
+- **Writing the handover is not stopping short.** It is bookkeeping you do at
+  every stage boundary and it never ends the run. *Ending* a session is the rare
+  case, and finishing the stage you are in and then handing over beats pushing one
+  stage further and losing the thread. Neither is a question for Sujit.
 - **If the rules seem to leave you no legal move, that's still your call.** Two
   instructions here can pull against each other — "deliver the whole scope" and
   "never touch his uncommitted work" being the obvious pair. A contradiction is
@@ -185,7 +189,8 @@ run each repo's own verify before moving on, so a broken contract surfaces at th
 seam rather than three repos later.
 
 Ping the thread when implementation is done: per repo, what changed in a phrase
-and the verify result.
+and the verify result. **Then refresh the handover doc** (Context discipline,
+below) — implement is the stage whose state is most expensive to reconstruct.
 
 ## Step 3 — Adversarial review (3× opus, parallel)
 
@@ -199,7 +204,9 @@ landed in), then re-verify that repo. Loop until the review is clean or only
 
 Ping the thread when the review lands (counts by severity, plus the headline of
 anything non-trivial), and again if the fix loop runs more than twice — a
-thrashing review loop is exactly the failure Sujit can't see from outside.
+thrashing review loop is exactly the failure Sujit can't see from outside. A third
+fix pass is also a tripwire: refresh the handover doc before starting it, recording
+the findings still outstanding.
 
 ## Step 4 — Test
 
@@ -208,7 +215,9 @@ any user-visible change (SSO-aware, no secret through your context), plus logs
 and traces. A cross-repo change is only proven by exercising the integrated
 path, so don't let green units in both repos stand in for it. Post the Slack
 results summary. Fix and re-test anything that failed. If blocked on SSO, Slack
-Sujit and continue with the rest.
+Sujit and continue with the rest. Refresh the handover doc when the stage closes,
+and again before a third verification iteration — a long eval or CI loop is where
+runs overrun, and its reasoning is the first thing a compaction flattens.
 
 ## Step 5 — Finalize
 
@@ -221,12 +230,44 @@ own repo, then post the Slack wrap-up and stop the `caffeinate` you started.
 
 The task is not done while any repo in the manifest lacks an MR or an MR review.
 
-## Context discipline (~50% → handover)
+Refresh the handover doc one last time before the wrap-up, so the open items and
+follow-ons outlive the session even though the run itself is over.
 
-Watch your context budget throughout. As it approaches ~50%, run the `handover`
-skill: write the handover doc, then end this session cleanly. The work resumes
-in a fresh session started from the handover doc — no state lost, no manual
-re-explanation. Prefer handing over at a stage boundary.
+## Context discipline — write the handover, don't predict the budget
+
+**Refresh the handover doc at every stage boundary, unconditionally.** After plan,
+after implement, after review, after test, after finalize: run the `handover`
+skill's *write* step (not its hand-off step) so
+`<primary>/.dev-flow/handover-<branch>.md` is always current. It costs a couple of
+minutes against state you already hold, and it is what makes losing context a
+non-event.
+
+Do **not** try to judge your remaining context as a percentage. You cannot see it.
+The figure in your context is a budget total that barely moves across a long run,
+while the context *window* fills independently; there is no hook that fires on a
+window threshold and no mechanism that reports live usage to you. A rule keyed to
+that number fails silently, which is exactly what it did before this was written.
+
+Two things to know about what actually happens. Auto-compaction is automatic and
+needs nobody: the harness summarises and the session continues, so a run does not
+die of context exhaustion. But compaction is **lossy** — a summariser keeps what it
+judges important, and the hard-won detail of a long run (why a number moved, which
+findings you declined and why) is exactly what gets flattened. The handover doc is
+how you choose what survives.
+
+**Observable tripwires**, since you can count these even though you cannot measure
+context. Any of them means refresh the handover doc now and say so in the Slack
+thread, because the run has exceeded its expected shape:
+
+- the review fix loop reaches a third pass
+- a verification loop (evals, CI, browser) reaches a third iteration
+- more than about six sub-agents have run
+- you have been through every stage and are still not finished
+
+**Ending the session** is a separate decision from writing the doc, and a rarer
+one: take it only when a fresh session is genuinely cheaper than a compacted one,
+and never mid-stage. Hooks cannot end or start a session, so say plainly in Slack
+and in the terminal that you are handing over, and give the resume command.
 
 ## Throughout
 

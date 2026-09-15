@@ -1,21 +1,38 @@
 ---
 name: handover
-description: Write a handover document when the session context is getting full (~50%), so a fresh session can resume the work with no loss of state. Autonomous runs invoke this themselves before context exhaustion.
+description: Write or refresh the handover document so a fresh session (or a compacted one) resumes the work with no loss of state. Autonomous runs refresh it at every stage boundary rather than trying to judge remaining context.
 argument-hint: [optional note on where things stand]
 allowed-tools: Bash, Read, Write, Glob, Grep, mcp__claude_ai_Slack__slack_send_message
 ---
 
 # Handover
 
-Capture enough state that a new session resumes seamlessly. A long autonomous
-run must not die of context exhaustion mid-task — write this **before** context
-runs out (target ~50% usage), then the next session starts from it.
+Capture enough state that a compacted session, or a brand new one, resumes
+seamlessly. Auto-compaction will keep the session alive on its own; what it will
+not keep is the *detail*, since a summariser decides what matters rather than you.
+This doc is where you choose what survives, so it is written early and often
+rather than once at the end.
 
 ## When to trigger
 
-- Context usage crosses ~50%, or
-- A natural stage boundary is reached and remaining work is large, or
-- The orchestrator decides a fresh session is cheaper than continuing.
+**Writing** this doc is routine, not exceptional: every stage boundary, always.
+There is no context percentage to judge — you cannot see your window usage, and no
+hook reports it, so anything keyed to a number fails silently.
+
+Write or refresh it when:
+
+- a stage boundary is reached (plan, implement, review, test, finalize) — always,
+- an observable tripwire fires: a third review-fix pass, a third verification
+  iteration, more than about six sub-agents, or every stage done and still not
+  finished,
+- a `PreCompact` hook tells you the doc is missing or stale — write it immediately,
+  while there is still context to write it with.
+
+**Handing off** — actually ending the session — is the rarer decision, taken only
+when a fresh session is genuinely cheaper than a compacted one, and never
+mid-stage. Auto-compaction is automatic and keeps the session alive, so the run
+will not die; what compaction costs you is *detail*, chosen by a summariser rather
+than by you. That is what this doc defends against.
 
 ## What to write
 
