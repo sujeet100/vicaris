@@ -88,7 +88,14 @@ across repos.
   scope creep and silent behaviour changes. Roll addressed ACs into one line;
   detail only partial/missing.
 
-- **Clean-code reviewer — grade against `coding-principles.md`.** Readability,
+- **Clean-code reviewer — grade against `coding-principles.md` *and the repo's
+  own convention docs*** (`docs/conventions/coding-conventions.md`,
+  `testing.md`, or whatever `project-context.md` names). Read both: the repo's
+  are narrower, numbered, and the ones the team argues about, so a review that
+  grades only against the plugin's principles never tests them — and rules the
+  reviewer never grades are rules implementation stops following. Cite the rule
+  id in each finding (`§3.8 names reveal intent`) so a fix pass can look it up
+  and a missing rule is visible as a finding with nothing to cite. Readability,
   naming, cyclomatic complexity, function/module size and single
   responsibility, declarative vs imperative, pure functions / no output args /
   no mutate-then-return, duplication, idiomatic modern constructs, typing at

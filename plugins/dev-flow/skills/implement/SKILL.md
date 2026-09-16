@@ -14,12 +14,31 @@ the implementation without stopping for confirmation at each step. Stop only
 for a genuine fork the plan didn't settle, or a discovery that invalidates the
 plan.
 
-## Step 1 — Reload the bar
+## Step 1 — Name the bar for *this* change
 
 Read `${CLAUDE_PLUGIN_ROOT}/references/coding-principles.md` and
 `${CLAUDE_PLUGIN_ROOT}/references/project-context.md` (if present), plus the
-project's `CLAUDE.md`. These are the standard the review stage grades you
-against — write to them the first time.
+project's `CLAUDE.md` **and the project's own convention docs** — in this
+codebase `docs/conventions/coding-conventions.md` and `testing.md`, whose rules
+are narrower and more specific than the plugin's principles. These are the
+standard the review stage grades you against.
+
+Then do the part that actually changes the code you write. Having the rules in
+context is not the same as reasoning against them: "declarative over
+imperative" has sat in `coding-principles.md` through changes that shipped
+accumulate-and-`continue` loops anyway. So before you edit a file, write out —
+briefly, in the run, not in a file:
+
+1. **Applicable rules.** The five to ten that bear on *this* change, named
+   (`§3.9 same input same output`, `§5.6 one concept one implementation`), not
+   "the conventions". A rule you can't name you won't apply.
+2. **Exemplars.** One to three places in this repo that already do the thing
+   well, and which you'll pattern-match against. Grep for them.
+3. **Rule per decision.** For each planned change, the one rule that shapes it,
+   and where a rule pulls against another, which wins and why.
+
+Keep this list where you can see it; Step 3's self-check grades against it.
+Don't edit anything until it exists.
 
 ## Step 2 — Load the repo set
 
@@ -33,7 +52,30 @@ Then work the set **in dependency order**, producer before consumer, using
 `git -C "$repo"` rather than `cd` so you can't lose track of where you are. Do
 not commit or push unless asked.
 
-## Step 3 — Build it
+## Step 3 — Build it, one slice at a time
+
+Work in **coherent slices**, not file by file and not function by function. A
+slice is one behaviour end to end — request through to persistence, or one rule
+plus the post-processing and tests that make it true. Function-by-function is
+actively worse: it optimises each function locally and loses the design.
+
+After each slice, before starting the next, run the self-check:
+
+```
+git diff            # the slice, not the whole change
+```
+
+Read that diff against the rules you named in Step 1 and list what it violates.
+Fix the violations now, while the slice is still in your head and nothing
+downstream depends on its shape. An empty list is a real answer — but reach it
+by reading, not by assuming. The failure this catches is the cheap one: a
+`continue`-shaped filter, a name with "and" in it, a docstring citing a caller
+you just renamed, a choice that falls out of emission order.
+
+This is a self-check, not the review — you wrote the code and will rationalise
+it. The independent pass is the adversarial-review stage, in a fresh context.
+Its job is to catch what you couldn't see; yours is to not hand it the
+mechanical stuff.
 
 Hold the principles live while writing:
 

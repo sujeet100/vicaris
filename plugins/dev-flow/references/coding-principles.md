@@ -31,7 +31,13 @@ Two framings sit above every rule below:
   is fair game to tidy.
 - **Declarative over imperative.** Comprehensions, map/filter semantics,
   pipeline-style transforms over manual accumulation loops. Express *what*, not
-  step-by-step *how*.
+  step-by-step *how*. The greppable tells, because this one gets violated with
+  the rule in context: a `continue` in a loop that only assembles a collection
+  (that's a comprehension's `if`, written long); an accumulator mutated inside
+  the loop that reads it, which is how a variable acquires a second meaning; and
+  `while True` with a mid-loop `return` where a recursive step or a bounded
+  fixed point states the same thing. A `for` loop earns its place for genuine
+  side effects — I/O, logging, mutating something the caller owns.
 - **Pure functions for business logic.** Validation, transforms, and
   post-processing take arguments and return values — no hidden I/O, no clock or
   environment reads inside. This makes them mock-free to test.
