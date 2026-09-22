@@ -64,7 +64,7 @@ fi
   fi
 
   if [ -f "$manifest" ]; then
-    printf 'Repos in scope (every stage must cover all of them; a stage that quietly did one repo is this workflow'"'"'s defining failure):\n'
+    printf 'Repos in scope — every stage covers all of them. `scripts/dev-flow-status.sh` checks this rather than you remembering it:\n'
     while IFS= read -r line; do
       [ -n "$line" ] && printf -- '- `%s`\n' "$line"
     done < "$manifest"

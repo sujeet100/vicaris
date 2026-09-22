@@ -173,8 +173,8 @@ This goes in `.git/info/exclude`, never in the repo's tracked `.gitignore` — t
 file is the team's, and nothing outside this workflow creates the folder.
 
 From here on, **every stage fans out over the manifest**: implement, review,
-test, fix passes, MRs and MR-review all cover all of it. Half-covered is worse
-than not started, because the run reports done.
+test, fix passes, MRs and MR-review all cover all of it
+(`references/multi-repo.md` has the per-stage table).
 
 ### Step 1c — Open the Slack thread
 
@@ -349,9 +349,11 @@ bash "${CLAUDE_PLUGIN_ROOT}/scripts/dev-flow-status.sh"
 
 It prints the risk class and one row per repo — commits, verify result, MR — and
 exits non-zero on a repo with work that has no verify result or no MR. Run it
-before the wrap-up and paste nothing; just fix what it names. A stage that quietly
-did one repo is this workflow's defining failure, and this is the one mechanism in
-the run that can actually fail because of it.
+before the wrap-up and fix what it names rather than reporting it.
+
+This is the only mechanism in the run that can actually fail when a stage quietly
+covered one repo, which is why the warning about it lives here and in
+`references/multi-repo.md` rather than in every stage.
 
 Refresh the handover doc one last time before the wrap-up, so the open items and
 follow-ons outlive the session even though the run itself is over.
@@ -402,6 +404,6 @@ and in the terminal that you are handing over, and give the resume command.
 - Re-confirm the repo before any git op (`git -C "$repo"` beats `cd`), and tag
   every file, finding and result with its repo name — bare `file:line` is
   ambiguous once more than one repo is in play.
-- Before declaring any stage complete, check it covered every repo in the
-  manifest. A stage that quietly did one repo is the defining failure of this
-  workflow.
+- Before declaring any stage complete, run
+  `bash "${CLAUDE_PLUGIN_ROOT}/scripts/dev-flow-status.sh"`. It checks coverage
+  rather than asking you to remember it.

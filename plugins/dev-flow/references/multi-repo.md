@@ -7,6 +7,12 @@ repo in scope**, because a stage that silently handles only the repo you started
 in produces the worst possible outcome — a task that looks finished, reviewed and
 green while half of it sits unreviewed on a `main` branch or has no MR at all.
 
+That used to be enforced by saying so in every stage, which is the least reliable
+mechanism available: prose cannot fail a run. `scripts/dev-flow-status.sh` can. It
+reads the artifacts the stages already write and exits non-zero on a repo with
+commits and no verify result or no MR, so the invariant is checked rather than
+remembered, and this file is the only place it is argued for.
+
 ## The repo set is an artifact, not a memory
 
 The `understand` stage determines which repos the change touches and records them

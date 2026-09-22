@@ -96,9 +96,9 @@ work. Keep the wording plain, no AI-writing tells.
 `${CLAUDE_PLUGIN_ROOT}/references/notifications.md`, rather than holding them all
 for the wrap-up.
 
-Before moving on, confirm every repo in the manifest either has an MR or is
-recorded as having no changes. A repo with branch commits and no MR is work that
-silently never ships.
+Before moving on, run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/dev-flow-status.sh"`.
+It exits non-zero on a repo that has commits and no MR, which is the one state
+that looks finished and ships nothing.
 
 **If the change touched prompts**, the component eval is mandatory and runs on
 the MR pipeline (never locally). Per the sidecar, trigger the **manual** eval
