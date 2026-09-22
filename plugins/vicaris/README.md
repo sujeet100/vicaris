@@ -1,10 +1,35 @@
-# Vicaris
+<p align="center">
+  <img src="assets/vicaris-sigil.svg" width="104" alt="Vicaris">
+</p>
+
+<h1 align="center">VICARIS</h1>
+<p align="center"><em>The one you send in your place.</em></p>
+
 
 An autonomous, end-to-end development workflow packaged as a Claude Code
 plugin, grounded in a captured statement of how Sujit likes code written and
 reviewed. It runs a task from a Jira key or brief all the way to a reviewed,
 tested, finalized change — deciding every fork itself and logging the
 assumption, pinging Slack only on a genuine external blocker.
+
+## Identity
+
+The **sigil** — a V cut into a hexagonal seal — is the mark. It goes on the
+package, the CLI and the favicon, because it is the part that still reads at
+sixteen pixels. **The Emissary** is the mascot and stays in hero art, release
+notes and stickers; it is never asked to be a favicon, which is what usually
+ruins a mascot.
+
+| Asset | Use |
+|---|---|
+| `assets/vicaris-sigil.svg` | Primary mark, brass and bone on ink |
+| `assets/vicaris-sigil-mono.svg` | One ink via `currentColor`, inverts with the theme |
+| `assets/vicaris-sigil-16.svg` | Favicon build: thicker strokes, inner ring dropped |
+| `assets/vicaris-emissary.svg` | The Emissary, for illustration only |
+
+Palette: **Ink** `#0C0C0F`, **Bone** `#E6E1D5`, **Brass** `#C9A961`. Brass
+because an envoy carries a seal, and because it avoids the violet that every
+agent tool reaches for.
 
 ## Pipeline
 

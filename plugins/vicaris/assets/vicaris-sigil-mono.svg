@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200" fill="none" stroke="currentColor" role="img" aria-label="Vicaris">
+  <title>Vicaris</title>
+  <!-- One ink, taken from `currentColor`, so the mark follows the surrounding text and
+       inverts with the theme on its own. The inner ring is dropped: below about 32px it
+       closes up against the outer one and the mark turns to mud. -->
+  <path d="M100 8 L179.7 54 L179.7 146 L100 192 L20.3 146 L20.3 54 Z" stroke-width="2.6"/>
+  <path d="M72 72 L100 132 L128 72" stroke-width="10" stroke-linejoin="miter"/>
+</svg>

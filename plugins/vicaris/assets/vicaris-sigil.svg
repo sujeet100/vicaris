@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200" role="img" aria-label="Vicaris">
+  <title>Vicaris</title>
+  <path d="M100 8 L179.7 54 L179.7 146 L100 192 L20.3 146 L20.3 54 Z" fill="none" stroke="#C9A961" stroke-width="2.6"/>
+  <path d="M100 22 L167.5 61 L167.5 139 L100 178 L32.5 139 L32.5 61 Z" fill="none" stroke="#C9A961" stroke-width="1" opacity="0.4"/>
+  <path d="M72 72 L100 132 L128 72" fill="none" stroke="#E6E1D5" stroke-width="10" stroke-linejoin="miter"/>
+</svg>

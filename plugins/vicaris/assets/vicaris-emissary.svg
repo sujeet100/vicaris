@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 420" width="300" height="420" role="img" aria-label="The Emissary: a masked envoy in a dark mantle, carrying a sealed dossier">
+  <title>The Emissary</title>
+  <!-- Ink #0C0C0F · Bone #E6E1D5 · Brass #C9A961. The mantle is dark and defined by a brass
+       rim rather than being a pale mass, and the head is a geometric faceplate above a
+       standing collar — never a hood. -->
+  <path d="M112 162 L106 106 L150 86 L204 74 L196 162 Z" fill="#1E1E24" stroke="#C9A961" stroke-width="1.5"/>
+  <path d="M116 154 L188 154 L208 258 L220 372 L84 372 L94 258 Z" fill="#17171C" stroke="#C9A961" stroke-width="1.6"/>
+  <path d="M176 232 L228 222 L237 276 L185 286 Z" fill="#0C0C0F" stroke="#C9A961" stroke-width="1.7"/>
+  <circle cx="206" cy="254" r="6" fill="#C9A961"/>
+  <path d="M150 56 L173 66 L175 98 L162 122 L138 122 L125 98 L127 66 Z" fill="#E6E1D5"/>
+  <path d="M133 87 L167 87 L167 97 L133 97 Z" fill="#0C0C0F"/>
+  <path d="M131 76 L169 76" stroke="#C9A961" stroke-width="2.4"/>
+  <path d="M143 110 L157 110" stroke="#C9A961" stroke-width="1.6" opacity="0.6"/>
+  <path d="M136 184 L150 206 L164 184" fill="none" stroke="#C9A961" stroke-width="3.2" stroke-linecap="square"/>
+</svg>
