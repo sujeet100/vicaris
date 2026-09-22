@@ -64,7 +64,7 @@ manifest="$dev_flow_dir/repos-$branch.txt"
 handover="$dev_flow_dir/handover-$branch.md"
 
 # Only guard an actual run: a manifest, a plan, or an existing handover for this branch.
-if [ ! -f "$manifest" ] && [ ! -f "$dev_flow_dir/plan-$branch.md" ] && [ ! -f "$handover" ]; then
+if [ ! -f "$manifest" ] && [ ! -f "$dev_flow_dir/understanding-$branch.md" ] && [ ! -f "$handover" ]; then
   exit 0
 fi
 
@@ -95,9 +95,10 @@ it from, then continue; this guard will not block again.
 
   $handover
 
-Include: stage reached, per-repo state from $manifest, what is done and verified,
-the exact next action, decisions and assumptions already settled, open review
-findings, and the resume command. See the handover skill.
+Include: stage reached, the risk class, per-repo state from $manifest, what is done
+and verified, the exact next action, decisions and assumptions already settled, which
+fix pass each loop is on, open review findings, and the resume command. See the
+handover skill.
 EOF
 
 exit 2

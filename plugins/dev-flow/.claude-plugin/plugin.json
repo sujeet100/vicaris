@@ -1,7 +1,7 @@
 {
   "name": "dev-flow",
-  "description": "End-to-end dev workflow grounded in Sujit's coding principles: plan (fable) -> implement (opus, auto) -> parallel adversarial review (PO / clean-code / design) -> browser test -> handover -> finalize + MR review",
-  "version": "0.2.0",
+  "description": "End-to-end dev workflow grounded in Sujit's coding principles: understand + risk class (fable) -> design note + blind design challenge -> implement (opus, auto) -> deterministic gate -> adversarial review (mr-review's review-changes per repo + a whole-change PO pass) -> browser test -> handover -> finalize + MR review",
+  "version": "0.5.0",
   "author": {
     "name": "Sujit Kamthe"
   }

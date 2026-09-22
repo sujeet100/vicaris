@@ -39,10 +39,12 @@ dev_flow_dir="$repo_root/.dev-flow"
 
 manifest="$dev_flow_dir/repos-$branch.txt"
 handover="$dev_flow_dir/handover-$branch.md"
-plan="$dev_flow_dir/plan-$branch.md"
+understanding="$dev_flow_dir/understanding-$branch.md"
+risk="$dev_flow_dir/risk-$branch.txt"
+ledger="$dev_flow_dir/fix-ledger-$branch.md"
 thread="$dev_flow_dir/slack-thread-$branch.txt"
 
-if [ ! -f "$manifest" ] && [ ! -f "$plan" ] && [ ! -f "$handover" ]; then
+if [ ! -f "$manifest" ] && [ ! -f "$understanding" ] && [ ! -f "$handover" ]; then
   exit 0
 fi
 
@@ -69,7 +71,19 @@ fi
     printf '\n'
   fi
 
-  [ -f "$plan" ] && printf 'Plan: `%s`\n' "$plan"
+  # The risk class gates every remaining stage, so losing it silently means running
+  # either too much ceremony or — the failure that matters — too little.
+  if [ -f "$risk" ]; then
+    printf 'Risk class (gates design note, design challenge, review passes, browser leg):\n'
+    sed -n '1,2p' "$risk" | sed 's/^/- /'
+    printf '\n'
+  fi
+
+  [ -f "$understanding" ] && printf 'Understanding (acceptance criteria + the readings rejected): `%s`\n' "$understanding"
+  if [ -f "$ledger" ]; then
+    printf 'Fix ledger: `%s` — %s pass(es) recorded. The loop cap is two; a cap reset by a compaction is not a cap.\n' \
+      "$ledger" "$(grep -ci '^## pass' "$ledger" 2>/dev/null || echo 0)"
+  fi
   [ -f "$thread" ] && printf 'Slack thread ts: `%s` (thread every ping under it)\n' "$(cat "$thread" 2>/dev/null)"
   printf '\nContext was just compacted or resumed, so detail has been summarised away. Do not re-derive\n'
   printf 'decisions the handover doc already records, and do not re-litigate settled forks.\n'

@@ -2,7 +2,7 @@
 name: handover
 description: Write or refresh the handover document so a fresh session (or a compacted one) resumes the work with no loss of state. Autonomous runs refresh it at every stage boundary rather than trying to judge remaining context.
 argument-hint: [optional note on where things stand]
-allowed-tools: Bash, Read, Write, Glob, Grep, mcp__claude_ai_Slack__slack_send_message
+allowed-tools: Bash, Read, Write, Glob, Grep, mcp__claude_ai_Slack__slack_send_message, mcp__claude_ai_Atlassian__getJiraIssue, mcp__claude_ai_Atlassian__searchJiraIssuesUsingJql, mcp__claude_ai_Atlassian__getJiraIssueRemoteIssueLinks
 ---
 
 # Handover
@@ -40,7 +40,14 @@ Write a scratch handover doc (do not commit it) at a stable path — prefer
 `<primary-repo>/.dev-flow/handover-<branch>.md` (create `.dev-flow/` if absent; it
 is scratch) or the session scratchpad. Keep it dense and factual:
 
-- **Task** — the goal and acceptance criteria, and the Jira key / branch.
+- **Task** — the goal and acceptance criteria, and the Jira key / branch. Point at
+  `<primary-repo>/.dev-flow/understanding-<branch>.md` rather than restating it; the
+  rejected readings in it are what stop a resumed session re-deciding a criterion
+  differently from the first one.
+- **Risk class** — the line from `<primary-repo>/.dev-flow/risk-<branch>.txt`, and
+  whether the gate's observed check has raised it yet. Every stage branches on this,
+  so a session that resumes without it runs either too much ceremony or too little,
+  and the second failure is silent.
 - **Repos in scope** — every repo in the manifest
   (`<primary-repo>/.dev-flow/repos-<branch>.txt`, see
   `${CLAUDE_PLUGIN_ROOT}/references/multi-repo.md`), in dependency order, each
@@ -48,16 +55,29 @@ is scratch) or the session scratchpad. Keep it dense and factual:
   has an MR. Losing a sibling repo across the session boundary is the easiest way
   for half a change to be abandoned, so make this list explicit even when the
   manifest exists.
-- **Stage** — where in plan → implement → review → test → finalize things are,
+- **Stage** — where in plan → design → challenge → implement → review → test →
+  finalize things are,
   and **per repo** where they differ.
 - **Done** — what's implemented and verified, with the verify result.
 - **In flight** — the exact next action, mid-edit files (repo-qualified), and any
   partial state.
 - **Decisions + assumptions** — every fork resolved so far and the assumption
   behind it, so the next session doesn't re-litigate. Include the cross-repo
-  contract and any required merge order.
+  contract and any required merge order. For the per-repo reasoning, point at each
+  repo's own `.dev-flow/design-notes-<branch>.md` rather than restating it: the
+  design and simplification notes `implement` leaves beside each repo's code
+  already hold the rejected alternatives and why they lost, which is the part a
+  summariser drops first and the part the next session most needs. List the paths,
+  one per repo, so none is lost with the session. Point at
+  `<primary-repo>/.dev-flow/design-challenge-<branch>.md` the same way, and say
+  whether the challenge has run yet — a resumed session that re-runs it wastes two
+  agents, and one that skips it because nobody said loses the only pass that
+  questions the approach.
 - **Open items** — review findings not yet fixed (repo-qualified), tests not yet
-  added, anything parked.
+  added, anything parked. Point at `<primary>/.dev-flow/fix-ledger-<branch>.md` and
+  **say which fix pass each loop is on**. The caps are two passes
+  (`${CLAUDE_PLUGIN_ROOT}/references/gates.md`), and a cap a compaction can reset to
+  zero is not a cap.
 - **Environment** — every repo path and branch, stack/SSO state, whether
   `caffeinate` is running, relevant PIDs.
 - **Resume command** — the exact `/dev-flow` (or stage) invocation to continue.

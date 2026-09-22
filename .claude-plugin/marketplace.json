@@ -8,10 +8,10 @@
   "plugins": [
     {
       "name": "dev-flow",
-      "description": "End-to-end dev workflow grounded in Sujit's coding principles: plan, implement, parallel adversarial review, browser test, handover, finalize",
+      "description": "End-to-end dev workflow grounded in Sujit's coding principles: understand, implement, design challenge, risk-adaptive review, browser test, handover, finalize",
       "source": "./plugins/dev-flow",
       "category": "development",
-      "version": "0.2.0"
+      "version": "0.5.0"
     }
   ]
 }

@@ -9,8 +9,8 @@ green while half of it sits unreviewed on a `main` branch or has no MR at all.
 
 ## The repo set is an artifact, not a memory
 
-The `plan` stage determines which repos the change touches and records them in
-its **Repos in scope** section. Step 1b of the orchestrator then writes that list
+The `understand` stage determines which repos the change touches and records them
+in its **Repos in scope** section. Step 1b of the orchestrator then writes that list
 to a manifest so that later stages, sub-agents, and resumed sessions all read the
 same set rather than re-deriving it:
 
@@ -19,10 +19,56 @@ same set rather than re-deriving it:
 ```
 
 One absolute repo path per line, in **dependency order** — producers before
-consumers, so a contract change lands before the code that consumes it. The
-first line is the primary repo, which owns the scratch docs (plan, review,
-handover, completion) and the manifest itself. `.dev-flow/` is scratch: never
-commit it.
+consumers, so a contract change lands before the code that consumes it. The first
+line is the primary repo.
+
+## Where a scratch doc lives: with the code it describes
+
+Every run writes working docs, and each one goes in the `.dev-flow/` folder of the
+repo it is *about*. A design note describing why a class in the consumer looks the
+way it does belongs beside that consumer, where the next person to open that repo
+will find it and where it survives the repo being worked on alone. Piling every
+repo's notes into the primary repo makes the primary a filing cabinet for code it
+does not contain, and the notes go stale invisibly once the branch moves on.
+
+| Doc | Lives in |
+|---|---|
+| Design + simplification notes | **that repo** — `<repo>/.dev-flow/design-notes-<branch>.md` |
+| Verify output worth keeping | **that repo** — `<repo>/.dev-flow/verify-<branch>.txt` |
+| The manifest | primary — `<primary>/.dev-flow/repos-<branch>.txt` |
+| The Slack thread `ts` | primary — `<primary>/.dev-flow/slack-thread-<branch>.txt` |
+| The design challenge | primary — `<primary>/.dev-flow/design-challenge-<branch>.md` |
+| The risk class | primary — `<primary>/.dev-flow/risk-<branch>.txt` |
+| The fix ledger | primary — `<primary>/.dev-flow/fix-ledger-<branch>.md` |
+| The MR url, once raised | **that repo** — `<repo>/.dev-flow/mr-<branch>.txt` |
+| Understanding, review report, handover, completion doc | primary, one per change |
+
+The split is not a convention to memorise, it follows from one question: is this
+doc about one repo's code, or about the change as a whole? A handover describing
+where five repos stand cannot live in any one of them, and a completion doc Sujit
+reads in one place would be worse as five. Everything about a single repo's code
+goes with that code.
+
+**`.dev-flow/` is scratch and is never committed, in any repo.** Don't add it to a
+tracked `.gitignore` either — that is a change to the team's file for something
+only this workflow creates. Exclude it locally the first time you write into a
+repo, which costs one line and leaves `git status` clean so a stray scratch file
+can never ride along in a commit and the next stage's clean-tree check still means
+something.
+
+`--git-common-dir` is what makes that work everywhere: in a worktree `.git` is a
+file rather than a directory, and the flag resolves to the shared git directory the
+worktree and its parent both use — so one exclude covers a repo and every worktree
+cut from it, which is the case that matters here since a dirty tree sends this
+workflow into a worktree by default. It can return a relative path when run from
+the repo root, hence the absolute-path guard:
+
+```bash
+GITDIR=$(git -C "$repo" rev-parse --git-common-dir)
+case "$GITDIR" in /*) ;; *) GITDIR="$repo/$GITDIR" ;; esac
+grep -qxF '.dev-flow/' "$GITDIR/info/exclude" 2>/dev/null \
+  || echo '.dev-flow/' >> "$GITDIR/info/exclude"
+```
 
 Reading the set, in any stage:
 
@@ -103,14 +149,20 @@ blocking question costs.
 
 | Stage | Must cover every repo |
 |---|---|
-| `plan` | Read code from all of them; name the set + freshness in the plan |
+| `understand` | Read code from all of them; name the set + freshness, and set the risk class |
 | Step 1b | Fetch, clean-check and branch each one off its own base |
-| `implement` | Edit in dependency order; run each repo's own verify command |
+| `implement` | A design note for **every** repo before the first edit in any; then edit in dependency order, running each repo's own verify through `dev-flow-gate.sh` |
+| The gate | `dev-flow-gate.sh` per repo, then `dev-flow-risk.sh` over the set |
+| `design-challenge` | One blind design over the **whole** change and every repo's base; amends the notes it changes |
 | `adversarial-review` | Diff **every** repo; reviewers see the union, plus the cross-repo contract |
 | `test` | Unit-verify each repo; exercise the integrated behaviour once, end-to-end |
 | Fix passes | Apply findings in whichever repo they landed in, then re-verify that repo |
 | `finalize` | One MR per repo, cross-linked; MR-review bot on every MR; fixes back through every repo |
 | `handover` | Record every repo, its branch, and its state |
+
+`scripts/dev-flow-status.sh` checks this table rather than restating it: one row per
+repo with its commits, verify result and MR, exiting non-zero on a repo with work
+and neither. Run it before any stage claims to be done.
 
 ## Attribute everything to a repo
 

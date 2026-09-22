@@ -2,7 +2,7 @@
 name: test
 description: Verify a change end-to-end — fast unit suite plus real browser testing of the app, checking logs and traces — then post a Slack summary of what was tested, what worked, and what didn't. Sends a Slack ping if blocked on SSO.
 argument-hint: [what to exercise, or the feature under test]
-allowed-tools: Bash, Read, Glob, Grep, mcp__claude_ai_Slack__slack_send_message, mcp__chrome-devtools__navigate_page, mcp__chrome-devtools__new_page, mcp__chrome-devtools__take_snapshot, mcp__chrome-devtools__take_screenshot, mcp__chrome-devtools__click, mcp__chrome-devtools__fill, mcp__chrome-devtools__fill_form, mcp__chrome-devtools__wait_for, mcp__chrome-devtools__list_console_messages, mcp__chrome-devtools__list_network_requests, mcp__chrome-devtools__evaluate_script
+allowed-tools: Bash, Read, Glob, Grep, mcp__claude_ai_Slack__slack_send_message, mcp__chrome-devtools__navigate_page, mcp__chrome-devtools__new_page, mcp__chrome-devtools__take_snapshot, mcp__chrome-devtools__take_screenshot, mcp__chrome-devtools__click, mcp__chrome-devtools__fill, mcp__chrome-devtools__fill_form, mcp__chrome-devtools__wait_for, mcp__chrome-devtools__list_console_messages, mcp__chrome-devtools__list_network_requests, mcp__chrome-devtools__evaluate_script, mcp__claude_ai_Atlassian__getJiraIssue, mcp__claude_ai_Atlassian__searchJiraIssuesUsingJql, mcp__claude_ai_Atlassian__getJiraIssueRemoteIssueLinks, mcp__claude_ai_Atlassian__getConfluencePage, mcp__claude_ai_Atlassian__searchConfluenceUsingCql, mcp__claude_ai_Atlassian__getPagesInConfluenceSpace, mcp__claude_ai_Atlassian__getConfluencePageDescendants, mcp__claude_ai_Atlassian__getConfluenceSpaces
 ---
 
 # Test
@@ -20,15 +20,33 @@ slow, and an unannounced one looks like a stall.
 
 Load the repo set per `${CLAUDE_PLUGIN_ROOT}/references/multi-repo.md` (manifest
 at `<primary-repo>/.dev-flow/repos-<branch>.txt`; no manifest means the current
-repo alone). Run the verify command in **each** repo — each has its own
-toolchain, so they don't substitute for one another — and record the result per
-repo for the summary. Fall back to the project's standard unit-test command where
+repo alone).
+
+**Read each repo's `.dev-flow/verify-<branch>.txt` rather than re-running its
+suite.** The gate before review already ran it and recorded a `RESULT:` line
+(`${CLAUDE_PLUGIN_ROOT}/references/gates.md`). Re-run a repo only when its tree has
+moved since — a fix pass touched it, or the file is missing or older than the last
+commit — and then through the same script, so the record stays true:
+
+```bash
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/dev-flow-gate.sh" "$repo" "$VERIFY_CMD"
+```
+
+Running a green suite twice is not free on a large repo, and it is the kind of
+waste that looks like diligence. Fall back to the project's standard unit-test command where
 the sidecar doesn't name one. Don't run eval or integration suites to verify.
 
 ## Step 2 — Is the app worth driving?
 
-If the change is backend-only and fully covered by units, note that and skip to
-Step 6. If it has a user-visible effect, drive the real UI.
+The risk class answers most of this before you look
+(`${CLAUDE_PLUGIN_ROOT}/references/risk-classes.md`). `mechanical` skips the browser
+leg — a field threaded through an existing pattern is proven by the parity check and
+the unit suites, and driving a UI to watch it appear is an hour spent confirming a
+grep. `tiny` and `normal` earn it when the change is user-visible. `elevated` and
+`production` always get it.
+
+Within that, if the change is backend-only and fully covered by units, note that and
+skip to Step 6. If it has a user-visible effect, drive the real UI.
 
 **A change spanning repos always earns a run through the app**, even when every
 repo's units are green, because the units are exactly what can't see the seam
@@ -88,6 +106,13 @@ message per `references/notifications.md`. Two variants:
   skill); keep it scannable.
 
 ## Step 8 — Fix and re-test
+
+**Capped at two passes**, like every loop in this workflow, with each outcome in
+`<primary>/.dev-flow/fix-ledger-<branch>.md`
+(`${CLAUDE_PLUGIN_ROOT}/references/gates.md`). A third failure of the same thing is
+telling you the implementation is wrong rather than incomplete; record it as
+outstanding, carry it into the completion doc and the MR, and let a human see it
+rather than patching toward green.
 
 If something failed, make the fix (back through implement / review as needed) in
 **whichever repo the fault lives in** — for a cross-repo failure decide whether
