@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="256" height="256" role="img" aria-label="The Vicaris Familiar, working">
+  <title>The Vicaris Familiar, working</title>
+  <!-- Working: crouched, ears raked back, pupils drawn to a V, the seal on the brow. The bone keyline around the head separates it from the haunches; it is the ground colour, so swap it for the ink build. -->
+  <g fill="#15130F">
+    
+    <path d="M96 84 C110 86 122 80 124 66 C125 58 121 52 116 52 C113.5 52 112.5 54.5 114 56 C117.5 55.5 121 59 120 66 C118.5 76 108 82 96 80 Z"/>
+    
+    <path d="M26 92 C22 74 28 52 44 48 C52 46 60 52 62 62 L62 92 Z"/>
+    <path d="M102 92 C106 74 100 52 84 48 C76 46 68 52 66 62 L66 92 Z"/>
+  </g>
+  
+  <g fill="#15130F" stroke="#EDE6D6" stroke-width="2.4" stroke-linejoin="round" paint-order="stroke">
+    <path d="M20 36 L42 60 L52 54 Z"/>
+    <path d="M108 36 L86 60 L76 54 Z"/>
+    <path d="M40 58 L52 53 L76 53 L88 58 L90 68 L82 84 L67.5 90 L60.5 90 L46 84 L38 68 Z"/>
+  </g>
+  
+  <g fill="#15130F">
+    <path d="M30 88 L54 88 L55 98 Q52 102.5 48.5 99 Q45 103 41.5 99 Q38 103 34 99 Q31 101.5 29 97 Z"/>
+    <path d="M74 88 L98 88 L99 97 Q97 101.5 94 99 Q90.5 103 87 99 Q83 103 79.5 99 Q76 102.5 73 98 Z"/>
+  </g>
+  
+  <path d="M43 71 Q50.5 66 58 69.5 Q52 74.5 43 71 Z" fill="#C9963A"/>
+  <path d="M85 71 Q77.5 66 70 69.5 Q76 74.5 85 71 Z" fill="#C9963A"/>
+  <path d="M48.9 68.6 L50.6 72.4 L52.3 68.4" fill="none" stroke="#15130F" stroke-width="1.5"/>
+  <path d="M75.7 68.4 L77.4 72.4 L79.1 68.6" fill="none" stroke="#15130F" stroke-width="1.5"/>
+  
+  <path d="M64 55.5 L68.3 58 L68.3 63 L64 65.5 L59.7 63 L59.7 58 Z" fill="none" stroke="#C9963A" stroke-width="0.9"/>
+  <path d="M61.8 59 L64 63 L66.2 59" fill="none" stroke="#C9963A" stroke-width="1.1"/>
+</svg>

@@ -1,6 +1,12 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200" role="img" aria-label="Vicaris">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="200" height="200" role="img" aria-label="Vicaris">
   <title>Vicaris</title>
-  <path d="M100 8 L179.7 54 L179.7 146 L100 192 L20.3 146 L20.3 54 Z" fill="none" stroke="#C9A961" stroke-width="2.6"/>
-  <path d="M100 22 L167.5 61 L167.5 139 L100 178 L32.5 139 L32.5 61 Z" fill="none" stroke="#C9A961" stroke-width="1" opacity="0.4"/>
-  <path d="M72 72 L100 132 L128 72" fill="none" stroke="#E6E1D5" stroke-width="10" stroke-linejoin="miter"/>
+  <!-- The mark is the Familiar's head: two raked ears, a wedge face, two amber wedges for eyes.
+       Five flat shapes, no pupils, no curves. Drawn on a 16 grid so the favicon is this same file. -->
+  <g fill="#15130F">
+  <path d="M1.5 1.5 L3 8 L6.5 6.5 Z"/>
+  <path d="M14.5 1.5 L13 8 L9.5 6.5 Z"/>
+  <path d="M3 7 L6.5 6 L9.5 6 L13 7 L13.5 9.5 L11 13.5 L8 15 L5 13.5 L2.5 9.5 Z"/>
+  </g>
+  <path d="M3.6 9.6 L6.9 8.6 L6.6 10.4 L4 10.6 Z" fill="#C9963A"/>
+  <path d="M12.4 9.6 L9.1 8.6 L9.4 10.4 L12 10.6 Z" fill="#C9963A"/>
 </svg>

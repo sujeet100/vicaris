@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="200" height="200" role="img" aria-label="Vicaris">
+  <title>Vicaris</title>
+  <!-- For ink grounds: a bone hairline sits behind the fill, so it rims the outer silhouette
+       only and never traces the seams between ears and head. -->
+  <g fill="none" stroke="#EDE6D6" stroke-width="0.7" stroke-linejoin="round">
+  <path d="M1.5 1.5 L3 8 L6.5 6.5 Z"/>
+  <path d="M14.5 1.5 L13 8 L9.5 6.5 Z"/>
+  <path d="M3 7 L6.5 6 L9.5 6 L13 7 L13.5 9.5 L11 13.5 L8 15 L5 13.5 L2.5 9.5 Z"/>
+  </g>
+  <g fill="#15130F">
+  <path d="M1.5 1.5 L3 8 L6.5 6.5 Z"/>
+  <path d="M14.5 1.5 L13 8 L9.5 6.5 Z"/>
+  <path d="M3 7 L6.5 6 L9.5 6 L13 7 L13.5 9.5 L11 13.5 L8 15 L5 13.5 L2.5 9.5 Z"/>
+  </g>
+  <path d="M3.6 9.6 L6.9 8.6 L6.6 10.4 L4 10.6 Z" fill="#C9963A"/>
+  <path d="M12.4 9.6 L9.1 8.6 L9.4 10.4 L12 10.6 Z" fill="#C9963A"/>
+</svg>

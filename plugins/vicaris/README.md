@@ -1,5 +1,8 @@
 <p align="center">
-  <img src="assets/vicaris-sigil.svg" width="104" alt="Vicaris">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/vicaris-sigil-dark.svg">
+    <img src="assets/vicaris-sigil.svg" width="104" alt="Vicaris">
+  </picture>
 </p>
 
 <h1 align="center">VICARIS</h1>
@@ -14,22 +17,39 @@ assumption, pinging Slack only on a genuine external blocker.
 
 ## Identity
 
-The **sigil** — a V cut into a hexagonal seal — is the mark. It goes on the
-package, the CLI and the favicon, because it is the part that still reads at
-sixteen pixels. **The Emissary** is the mascot and stays in hero art, release
-notes and stickers; it is never asked to be a favicon, which is what usually
-ruins a mascot.
+Vicaris is **the Familiar**: a compact black feline creature with amber eyes,
+drawn in the register of a Dark-type rather than a pet. A familiar is the one
+you send out to act in your place, so the premise needs no footnote, and the
+creature has two states that map onto the product's own. At rest it sits
+upright, tail hooked forward, ears up, brow plain. Working, it drops into a
+crouch, the ears rake back, the pupils draw to a tight V and a small amber seal
+surfaces on the brow.
+
+The **mark** is the Familiar's head — two tall outward-raked ears, a wedge
+face and two amber wedges for eyes — because that is the part that still reads
+at sixteen pixels. It goes on the package, the CLI and the favicon. The full
+creature stays in hero art, release notes and slides, and is never asked to be
+a favicon, which is what usually ruins a mascot.
 
 | Asset | Use |
 |---|---|
-| `assets/vicaris-sigil.svg` | Primary mark, brass and bone on ink |
-| `assets/vicaris-sigil-mono.svg` | One ink via `currentColor`, inverts with the theme |
-| `assets/vicaris-sigil-16.svg` | Favicon build: thicker strokes, inner ring dropped |
-| `assets/vicaris-emissary.svg` | The Emissary, for illustration only |
+| `assets/vicaris-sigil.svg` | Primary mark, ink and amber, for light grounds |
+| `assets/vicaris-sigil-dark.svg` | Same mark with a bone hairline rim, for ink grounds |
+| `assets/vicaris-sigil-mono.svg` | One ink via `currentColor`, eyes as negative space; inverts with the theme |
+| `assets/vicaris-sigil-16.svg` | Favicon build; the mark was drawn on a 16 grid, so this is the same geometry |
+| `assets/vicaris-familiar-rest.svg` / `-rest-dark.svg` | The Familiar at rest, for illustration |
+| `assets/vicaris-familiar-working.svg` / `-working-dark.svg` | The Familiar working, seal on the brow |
 
-Palette: **Ink** `#0C0C0F`, **Bone** `#E6E1D5`, **Brass** `#C9A961`. Brass
-because an envoy carries a seal, and because it avoids the violet that every
-agent tool reaches for.
+Palette: **Ink** `#15130F` for fur and text, **Ground** `#0B0A08` for dark
+surfaces, **Bone** `#EDE6D6` for paper and the rim, **Amber** `#C9963A` for
+the eyes, the seal and every accent. One gold only: amber and brass fight, so
+the eyes set the accent and the UI borrows it.
+
+A black cat is the most obvious familiar there is, so a few details do the work
+of making it ours and are treated as fixed: the pupil is cut as a V, the ears
+are tall and raked out rather than bat-shaped, there is no collar, the seal
+appears on the brow only while working and never glows, the tail hooks and ends
+in a flat nib rather than a spear, and the paws are long-toed rather than big.
 
 The four objects carry the workflow, which is why the mascot is worth having at
 all rather than being decoration:
@@ -37,8 +57,8 @@ all rather than being decoration:
 | Object | What it is |
 |---|---|
 | **The Writ** | the story entrusted to it |
-| **The Seal** | the boundaries it may act within |
-| **The Emissary** | Vicaris itself |
+| **The Seal** | the boundaries it may act within — the hexagon-and-V on the Familiar's brow |
+| **The Familiar** | Vicaris itself |
 | **The Record** | the design notes, review and completion doc it hands back |
 
 The documentation stays plain — Vicaris takes a development story through
