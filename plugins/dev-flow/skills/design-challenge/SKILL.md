@@ -114,14 +114,24 @@ charter is worth less than one that says it did.
 
 ## Step 2 — Design it blind (one **fable** sub-agent, fresh context)
 
-Spawn a single agent with `model: fable` and `subagent_type: general-purpose`.
-Never `fork`: a fork inherits this session's context, which is the author's
-context, and reintroduces exactly the contamination the extract was built to
-remove.
+Spawn a single agent with `subagent_type: blind-designer`, the definition this
+plugin ships in `agents/`. Never `fork`: a fork inherits this session's context,
+which is the author's context, and reintroduces exactly the contamination the
+extract was built to remove.
 
-Its prompt carries the acceptance criteria, the extracted paths in `$WORK`, and
-the instruction to read `$MRR/charter/blind_design.md` and follow it. Two lines
-it must also carry, because they are the ones an agent drifts from:
+Use the definition rather than an inline prompt, because it is what makes the
+isolation structural. It pins the model to fable and grants **only Read, Grep and
+Glob** — no Bash, so the agent cannot run `git`, cannot reach outside the extract,
+and cannot go looking for the branch, the plan or the design notes even if it
+decides to. Withholding by instruction and withholding by capability look the same
+right up until an agent drifts, and nothing downstream reports that it read what
+you asked it not to.
+
+Its prompt then carries only facts: the acceptance criteria, the extracted paths
+under `$WORK`, and `$MRR/charter/blind_design.md` as the path to follow.
+
+With no definition available, fall back to `general-purpose` on `model: fable` and
+add the two lines the definition otherwise makes unnecessary:
 
 > Work only inside `$WORK`. Do not read the original repositories, do not run
 > `git`, and do not search for a branch, a plan or a design note. Design the
@@ -227,9 +237,8 @@ this is the one stage whose ping is worth reading closely.
 ## Deciding, not asking
 
 This stage runs unattended like every other. A divergence is resolved here and
-recorded, never handed back as a question, and the autonomy contract in
-`${CLAUDE_PLUGIN_ROOT}/skills/dev-flow/SKILL.md` governs anything not settled
-above. One case is worth naming because it feels like an escalation and is not:
+recorded, never handed back as a question, and
+`${CLAUDE_PLUGIN_ROOT}/references/autonomy.md` governs anything not settled above. One case is worth naming because it feels like an escalation and is not:
 when the blind design is clearly better and adopting it means discarding work
 the plan specified, adopt it. Nothing has been built yet, which is exactly why
 this stage runs where it does.

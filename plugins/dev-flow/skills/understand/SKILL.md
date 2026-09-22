@@ -26,7 +26,10 @@ planning model is cheap and good at.
 
 ## Step 1 — Load the bar
 
-Read, in this order: `${CLAUDE_PLUGIN_ROOT}/references/coding-principles.md`,
+Read, in this order: `${CLAUDE_PLUGIN_ROOT}/references/autonomy.md` (this stage
+decides every fork rather than handing back a menu — including the ambiguous
+criteria, which get a chosen reading and a rejected one, never a question),
+`${CLAUDE_PLUGIN_ROOT}/references/coding-principles.md`,
 `${CLAUDE_PLUGIN_ROOT}/references/risk-classes.md` (this stage sets the class
 every later stage reads), `${CLAUDE_PLUGIN_ROOT}/references/multi-repo.md`,
 `${CLAUDE_PLUGIN_ROOT}/references/project-context.md` if present, and the

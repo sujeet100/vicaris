@@ -36,6 +36,13 @@ environment variable and let the shell resolve it at run time.
   security add-generic-password -s <service> -a <account> -w
   ```
 
+## Migrations
+
+- The command that applies a migration, and the one that reverses it.
+- A scratch or disposable database the rehearsal can run against, and how to reset
+  it. Without this the `production` gate records the rehearsal as not run, which is
+  honest but weaker than running it.
+
 ## Observability
 
 - Where traces and logs live, and how to reach them (skill, MCP, or URL).

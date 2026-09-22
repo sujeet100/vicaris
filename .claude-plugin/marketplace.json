@@ -11,7 +11,7 @@
       "description": "End-to-end dev workflow grounded in Sujit's coding principles: understand, implement, design challenge, risk-adaptive review, browser test, handover, finalize",
       "source": "./plugins/dev-flow",
       "category": "development",
-      "version": "0.5.0"
+      "version": "0.6.0"
     }
   ]
 }

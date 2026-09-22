@@ -178,9 +178,18 @@ buried in the thread (`references/notifications.md`). Draft it in Sujit's voice
 
 ## Step 5 — Stop keep-awake
 
-If the orchestrator started `caffeinate`, stop it now
-(`pkill -f 'caffeinate -dimsu'` for the one this run started, or kill the
-recorded PID).
+Stop the keep-awake this run started, **by its PID**:
+
+```bash
+PIDFILE="$PRIMARY/.dev-flow/caffeinate-$BRANCH.pid"
+[ -f "$PIDFILE" ] && kill "$(cat "$PIDFILE")" 2>/dev/null; rm -f "$PIDFILE"
+```
+
+Never `pkill -f 'caffeinate -dimsu'`. That pattern also matches a session Sujit
+launched as `caffeinate -dimsu claude`, and killing it ends the session — so the
+tidy-up step would be the thing that kills the run. With no pidfile, leave it:
+the `-t 21600` cap expires on its own, and a stray keep-awake costs far less than
+a killed session.
 
 ## Step 6 — Point at the doc
 

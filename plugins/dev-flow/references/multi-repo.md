@@ -138,12 +138,10 @@ MR-review, exactly as if they were the whole change) and record the blocked one 
 follow-on work, naming the blocker, in the completion doc, the shipped MRs'
 descriptions, and the Slack wrap-up.
 
-Either way, decide it yourself and keep moving. Do not ask which repos to include,
-whether to split the delivery, or how to clear the way. Don't hold back a finished
-repo's MR to keep the change "together" — a reviewable MR sitting unopened helps
-nobody, and a partial delivery that is *declared* partial is honest work. Sujit
-can always narrow it once he sees what landed; he cannot un-waste the hours a
-blocking question costs.
+Either way, decide it yourself and keep moving — `references/autonomy.md` has the
+reasoning. One rule is specific to this file and worth stating here: don't hold back
+a finished repo's MR to keep the change "together". A reviewable MR sitting unopened
+helps nobody, and a partial delivery that is *declared* partial is honest work.
 
 ## Fan-out rules per stage
 

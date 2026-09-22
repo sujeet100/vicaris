@@ -2,7 +2,7 @@
 name: adversarial-review
 description: Review the current change from independent angles before an MR exists — craft, structure and cross-file behaviour per repo via the mr-review plugin's review-changes, plus a PO pass over the whole change — then synthesise into one short, ranked, scannable report. Runs unattended, deciding every question rather than asking it.
 argument-hint: [Jira key or base branch override]
-allowed-tools: Bash, Read, Glob, Grep, Agent, Skill, mcp__claude_ai_Slack__slack_send_message, mcp__claude_ai_Atlassian__getJiraIssue, mcp__claude_ai_Atlassian__searchJiraIssuesUsingJql, mcp__claude_ai_Atlassian__getJiraIssueRemoteIssueLinks, mcp__claude_ai_Atlassian__getConfluencePage, mcp__claude_ai_Atlassian__searchConfluenceUsingCql, mcp__claude_ai_Atlassian__getPagesInConfluenceSpace, mcp__claude_ai_Atlassian__getConfluencePageDescendants, mcp__claude_ai_Atlassian__getConfluenceSpaces
+allowed-tools: Bash, Read, Write, Glob, Grep, Agent, Skill, mcp__claude_ai_Slack__slack_send_message, mcp__claude_ai_Atlassian__getJiraIssue, mcp__claude_ai_Atlassian__searchJiraIssuesUsingJql, mcp__claude_ai_Atlassian__getJiraIssueRemoteIssueLinks, mcp__claude_ai_Atlassian__getConfluencePage, mcp__claude_ai_Atlassian__searchConfluenceUsingCql, mcp__claude_ai_Atlassian__getPagesInConfluenceSpace, mcp__claude_ai_Atlassian__getConfluencePageDescendants, mcp__claude_ai_Atlassian__getConfluenceSpaces
 ---
 
 # Adversarial review
@@ -82,15 +82,29 @@ changing a function nothing calls. Without it, each repo's review comes back cle
 between them is broken — which is the defining failure of reviewing a cross-repo change, and the
 reason this flag is not optional when the manifest has more than one entry.
 
-**One repo at a time.** `review-changes` writes its plan and briefs to fixed paths under `/tmp`
-and clears them on entry, so two runs in parallel overwrite each other's briefs and the second
-review silently reads the first one's change context.
+**Run the repos in parallel** — one invocation per repo, launched together in a single message.
+`review-changes` opens a `mktemp -d` run directory in its Step 2 and writes its plan, briefs,
+findings and report inside it, so concurrent runs no longer touch each other's files. Review is
+the longest stage of a cross-repo run and there is nothing sequential about it: each repo's
+reviewers read their own diff, and `--also-repo` gives each of them the others to grep.
+
+If you are on an older `mr-review` that still writes to fixed `/tmp` paths and clears them on
+entry, run the repos **one at a time** instead — concurrent runs there overwrite each other's
+briefs mid-flight, and the second review silently reads the first one's change context. Check
+its Step 2 for the run directory before parallelising.
 
 Run its passes on `opus`, except where the table above bought `--quick` — that downgrades craft
 to sonnet and caps the agents, which is the right trade for a `tiny` change and the wrong one
-for anything above it. Take its ranked findings per repo and keep them tagged with the
-repo name — bare `file:line` is ambiguous once more than one repo is in play, and the fix pass
-routes by that tag.
+for anything above it. Take its ranked findings per repo and keep them tagged with the repo name — bare `file:line` is
+ambiguous once more than one repo is in play, and the fix pass routes by that tag.
+
+**Keep the reducer's JSON, not only its prose.** `review-changes` renders a report for a human and
+also writes `merged.json` in its run directory, which carries every finding with its severity,
+quotes and location plus a `dropped` array of what the caps suppressed. Note that path per repo.
+The fix pass and the ledger want structured findings — a finding you can mark applied or declined
+by id, and a `dropped` list that answers "was this already considered" when the standalone MR
+reviewer raises it again at finalize. Re-deriving that from prose is how a parked finding gets
+relitigated.
 
 If the `mr-review` plugin is not installed or the skill is unavailable, say so in the report and
 fall back to `Step 2b`. Do not skip the review.
@@ -151,13 +165,23 @@ content: the repo list with each path and resolved `BASE`, the changed-file stat
 
 `review-changes` grades one repository, so its PO pass would see one repo's share of the story and
 report every criterion the other side delivers as missing. Run the acceptance-criteria review here
-instead, as **one** opus sub-agent over the whole change: give it the repo list with each base, the
-story and its criteria, and let it pull every repo's diff itself.
+instead, as **one** sub-agent over the whole change, using `subagent_type: acceptance-criteria` —
+the definition this plugin ships in `agents/`. It pins the model to sonnet, which is what the
+charter runs this pass on and the right call: walking criteria, finding evidence and classifying
+it is structured verification rather than the judgement opus is bought for, and pinning it in a
+file stops the model drifting back up every time this prose is edited.
 
-It classifies the change as FULL or PARTIAL scope, maps every criterion to addressed / partial /
-missing, and checks the implementation actually does what each criterion says rather than that
-code exists near it. Scope creep and silent behaviour changes are findings. Addressed criteria roll
-into one line; only partial and missing get detail.
+Give it the repo list with each base, the story and its criteria, and let it pull every repo's
+diff itself. With no definition available, use `general-purpose` on `model: sonnet`.
+
+Point it at the charter rather than restating it: `<mr-review>/charter/stage_po.md`, resolved with
+`bash "${CLAUDE_PLUGIN_ROOT}/scripts/mr-review-root.sh"`. It already encodes the FULL/PARTIAL scope
+classification, the signals that make a change partial, and the rule that every in-scope criterion
+must be enumerated rather than silently skipped — all of which this file used to paraphrase, which
+is how a paraphrase drifts from the charter the MR bot grades against. Where the charter is
+unavailable, tell the agent to classify the change FULL or PARTIAL, map every criterion to
+addressed / partial / missing with the evidence, and treat scope creep and silent behaviour changes
+as findings. Addressed criteria roll into one line; only partial and missing get detail.
 
 On a **single-repo** change with a story, add `--maker` to Step 2's flags instead and let
 `review-changes` own this — its design pass builds an alternative from the story blind to the diff,
@@ -240,8 +264,10 @@ wants a human eye.
 
 ## Deciding, not asking
 
-Every question this stage could raise has a standing answer, because it runs unattended and a
-prompt waiting for a keypress costs the whole run.
+The contract and the standing resolutions live in
+`${CLAUDE_PLUGIN_ROOT}/references/autonomy.md`; nothing here asks Sujit anything. These rows are
+the ones specific to reviewing, and they are not in that file because they are about this stage's
+tools rather than about the change:
 
 | Situation | What you do |
 |---|---|

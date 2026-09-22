@@ -24,7 +24,8 @@ assumption, pinging Slack only on a genuine external blocker.
    │                                  No reviewer is spawned until this is green
    ├─ adversarial-review (opus)       passes bought by risk class: parity only at mechanical,
    │                                  --quick at tiny, signals at normal, forced at elevated+.
-   │                                  --also-repo for the seam + one AC pass. Fix loop caps at 2
+   │                                  repos reviewed in parallel · --also-repo for the seam ·
+   │                                  one AC pass (sonnet) · fix loop caps at 2
    ├─ test                            reads the gate's verify results · browser leg risk-gated ·
    │                                  logs/traces → Slack summary
    └─ finalize        (opus)          completion doc (length by class) + MR per repo +
@@ -59,6 +60,10 @@ apply a short inline prose bar and defer to `/de-ai` when it is available.
 
 ## The references
 
+- **`references/autonomy.md`** — the contract (never ask a blocking question,
+  deliver the whole scope, the closed list of what actually reaches Sujit) and the
+  standing resolutions for the forks that come up most runs. It used to live in four
+  files and two copies had already drifted, so every stage now cites this one.
 - **`references/risk-classes.md`** — the five classes (`mechanical`, `tiny`,
   `normal`, `elevated`, `production`), what puts a change in each, and the matrix of
   which stages each one buys. `understand` predicts the class; the gate re-derives
@@ -115,6 +120,22 @@ apply a short inline prose bar and defer to `/de-ai` when it is available.
   keychain→keystroke helper (`scripts/browser-login-helper.sh`) as a
   sign-off-gated fallback.
 
+## The agents
+
+Two sub-agents ship as definitions in `agents/` rather than as inline prompts, for
+the same reason everything else here moved out of prose:
+
+- **`blind-designer`** (fable, `Read, Grep, Glob`) — the design challenge's first
+  half. Its whole value is not having seen the plan, the design note or the branch,
+  and the definition grants no Bash, so it cannot run `git` or leave the extracted
+  pre-change tree even if it tries. Withholding by capability beats withholding by
+  instruction, because nothing downstream reports an agent that went looking.
+- **`acceptance-criteria`** (sonnet, read-only) — the whole-change criteria pass,
+  pinned to the model the charter actually runs it on.
+
+Every other sub-agent stays an inline prompt. Turning those two into files removed
+a real failure mode; turning the rest into files would be paperwork.
+
 ## The scripts
 
 Four small deterministic pieces, because the invariants that matter should be able
@@ -131,6 +152,8 @@ to fail a run rather than be repeated in prose:
 - **`dev-flow-status.sh`** — one row per repo with commits, verify and MR, exiting
   non-zero on work that has no MR. The per-repo checklist, generated rather than
   recalled.
+- **`mr-review-root.sh`** — locates the `mr-review` plugin's charter, overridable
+  with `DEVFLOW_MR_REVIEW_ROOT`.
 
 ## Prerequisites
 

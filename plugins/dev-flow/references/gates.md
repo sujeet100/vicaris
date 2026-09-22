@@ -29,7 +29,13 @@ Run, in this order, and stop at the first failure:
 2. **Observed risk** — `scripts/dev-flow-risk.sh`, which re-derives the class from
    the paths actually touched and can raise it. See `references/risk-classes.md`.
 
-3. **Integrated smoke**, where the class calls for it — the stack up on each repo's
+3. **Migration rehearsal**, at `production` with a `schema` tag — apply, reverse,
+   re-apply, against a scratch database per the sidecar. A migration that will not
+   reverse is a one-way door and this is the cheapest place to learn it. With no
+   migration command in the sidecar, record it as not run rather than skipping it
+   silently, and carry that into the MR.
+
+4. **Integrated smoke**, where the class calls for it — the stack up on each repo's
    *branch* build, one happy path through the change end to end. Not the full
    browser pass, which stays after review; one path, to prove the seam exists. A
    cross-repo change is exactly what each repo's green unit suite cannot see.
@@ -89,7 +95,10 @@ line that parked it.
 ```
 
 One section per pass, one line per finding: `repo · file:line · [source] · applied |
-declined — reason`. It exists for three readers. The next fix pass, so a finding is
+declined — reason`. Seed it from `review-changes`'s `merged.json` rather than from its rendered
+report — the JSON carries each finding's id, severity and quotes, plus the `dropped` array of what
+the caps suppressed, which is exactly what answers "did we already consider this" when a later
+reviewer raises the same point. It exists for three readers. The next fix pass, so a finding is
 not applied twice. The standalone MR reviewer's fix step, so an old argument is not
 had again. And a resumed session, which otherwise cannot tell whether it is entering
 pass one or pass three — and a loop cap that a compaction can reset is not a cap.
