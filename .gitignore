@@ -1,5 +1,5 @@
 .DS_Store
-.dev-flow/
+.vicaris/
 
 # Project sidecars hold client-specific config: never commit them.
 plugins/*/references/project-context.md

@@ -7,9 +7,9 @@
   },
   "plugins": [
     {
-      "name": "dev-flow",
+      "name": "vicaris",
       "description": "End-to-end dev workflow grounded in Sujit's coding principles: understand, implement, design challenge, risk-adaptive review, browser test, handover, finalize",
-      "source": "./plugins/dev-flow",
+      "source": "./plugins/vicaris",
       "category": "development",
       "version": "0.6.0"
     }
