@@ -1,15 +1,22 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 420" width="300" height="420" role="img" aria-label="The Emissary: a masked envoy in a dark mantle, carrying a sealed dossier">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="88 32 153 380" width="153" height="380" role="img" aria-label="The Emissary: a masked envoy in a structured mantle, carrying a sealed writ">
   <title>The Emissary</title>
-  <!-- Ink #0C0C0F · Bone #E6E1D5 · Brass #C9A961. The mantle is dark and defined by a brass
-       rim rather than being a pale mass, and the head is a geometric faceplate above a
-       standing collar — never a hood. -->
-  <path d="M112 162 L106 106 L150 86 L204 74 L196 162 Z" fill="#1E1E24" stroke="#C9A961" stroke-width="1.5"/>
-  <path d="M116 154 L188 154 L208 258 L220 372 L84 372 L94 258 Z" fill="#17171C" stroke="#C9A961" stroke-width="1.6"/>
-  <path d="M176 232 L228 222 L237 276 L185 286 Z" fill="#0C0C0F" stroke="#C9A961" stroke-width="1.7"/>
-  <circle cx="206" cy="254" r="6" fill="#C9A961"/>
-  <path d="M150 56 L173 66 L175 98 L162 122 L138 122 L125 98 L127 66 Z" fill="#E6E1D5"/>
-  <path d="M133 87 L167 87 L167 97 L133 97 Z" fill="#0C0C0F"/>
-  <path d="M131 76 L169 76" stroke="#C9A961" stroke-width="2.4"/>
-  <path d="M143 110 L157 110" stroke="#C9A961" stroke-width="1.6" opacity="0.6"/>
-  <path d="M136 184 L150 206 L164 184" fill="none" stroke="#C9A961" stroke-width="3.2" stroke-linecap="square"/>
+  <!-- Ink #0C0C0F · Bone #E6E1D5 · Brass #C9A961.
+       Rules this figure is drawn to, each one learned by breaking it:
+       no hood — a pale pointed hood over a dark face reads as Klan imagery whatever was meant;
+       no vertical brass mark crossing the visor — it makes a cross, and the point is an envoy
+       rather than clergy; no centre vent in the hem — it reads as legs in shorts. What carries
+       the character instead is the raised mantle over the writ-bearing shoulder, which is the
+       one feature recognisable from silhouette alone. -->
+  <path d="M104 156 L100 106 L150 86 L202 68 L196 156 Z" fill="#1E1E24" stroke="#C9A961" stroke-width="1.6"/>
+  <path d="M122 148 L178 148 L182 252 L118 252 Z" fill="#17171C" stroke="#C9A961" stroke-width="1.8"/>
+  <path d="M118 250 L182 250 L184 266 L116 266 Z" fill="#1E1E24" stroke="#C9A961" stroke-width="1.6"/>
+  <path d="M116 264 L184 264 L197 400 L103 386 Z" fill="#17171C" stroke="#C9A961" stroke-width="1.8"/>
+  <path d="M180 244 L218 236 L229 298 L191 306 Z" fill="#0C0C0F" stroke="#C9A961" stroke-width="1.8"/>
+  <path d="M187 243 L198 304" stroke="#C9A961" stroke-width="1.4" opacity="0.85"/>
+  <circle cx="206" cy="271" r="6" fill="#C9A961"/>
+  <path d="M176 130 L207 154 L211 222 L201 262 L179 258 L178 150 Z" fill="#23232A" stroke="#C9A961" stroke-width="1.8"/>
+  <path d="M150 44 L170 54 L172 86 L164 104 L150 116 L136 104 L128 86 L130 54 Z" fill="#E6E1D5"/>
+  <path d="M134 74 L166 74 L166 83 L134 83 Z" fill="#0C0C0F"/>
+  <path d="M143 93 L150 101 L157 93" fill="none" stroke="#C9A961" stroke-width="2.3" stroke-linecap="square"/>
+  <path d="M137 184 L150 206 L163 184" fill="none" stroke="#C9A961" stroke-width="3.4" stroke-linecap="square"/>
 </svg>

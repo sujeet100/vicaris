@@ -31,6 +31,20 @@ Palette: **Ink** `#0C0C0F`, **Bone** `#E6E1D5`, **Brass** `#C9A961`. Brass
 because an envoy carries a seal, and because it avoids the violet that every
 agent tool reaches for.
 
+The four objects carry the workflow, which is why the mascot is worth having at
+all rather than being decoration:
+
+| Object | What it is |
+|---|---|
+| **The Writ** | the story entrusted to it |
+| **The Seal** | the boundaries it may act within |
+| **The Emissary** | Vicaris itself |
+| **The Record** | the design notes, review and completion doc it hands back |
+
+The documentation stays plain — Vicaris takes a development story through
+understanding, design, implementation, testing and review. Only the identity
+speaks in the other register.
+
 ## Pipeline
 
 ```
