@@ -109,14 +109,25 @@ drifts from:
    line each, and carry every line into the completion doc. A run that could not
    ping, could not read the story, or reviewed without the charter is still a
    useful run; one that did those things silently is not.
-7. **Effort:** run every stage at high reasoning effort.
+7. **Effort:** run every stage at high reasoning effort, and set it explicitly —
+   Opus 5.5 defaults to `medium`, one level below the Opus models this workflow
+   was tuned on, so an unset effort quietly thins every design and review pass.
 
-## Step 1 — Understand (model: fable)
+**Models, in one place.** Opus does everything that needs judgement: understanding,
+design notes, the design comparison, review and finalize. Sonnet builds at
+`mechanical`, `tiny` and `normal`, and runs the acceptance-criteria pass, because
+both of those carry out a decision already made rather than make one. Fable
+appears once, as the blind designer. It is there because the design notes were
+written by opus, and an independent design from the same model tends to share their
+blind spots.
 
-Delegate to a **fable** sub-agent (Agent tool, `model: fable`) running the
-`understand` skill's method on `$ARGUMENTS`. Reading a story closely is exactly
-the work the planning model is cheap and fast at; implementation and review are
-not.
+## Step 1 — Understand (model: opus)
+
+Delegate to an **opus** sub-agent (Agent tool, `model: opus`) running the
+`understand` skill's method on `$ARGUMENTS`. A misread criterion survives a perfect
+implementation and a clean review, so this stage gets a judgement model; it is a
+sub-agent rather than you so the story's full text and every linked page stay out
+of the context that has to last the whole run.
 
 It returns, and writes to `<primary>/.vicaris/understanding-<branch>.md`: the
 acceptance criteria with the reading rejected for each ambiguous one, the
@@ -198,12 +209,22 @@ Then ping at each stage boundary per `references/notifications.md`. Sujit is not
 watching the terminal, so a stage that finishes silently is indistinguishable from
 a stage that hung. Send and move on; never wait for a reply.
 
-## Step 2 — Implement (model: opus, auto mode)
+## Step 2 — Implement (design: opus · build: by risk class, auto mode)
 
-Implement the change yourself on **opus** at high effort, in **auto mode**,
-following the `implement` skill: clean, small, typed, declarative, domain-
-modelled, concise-but-sufficient tests, zero warnings, fast verify. Do not run
-eval / integration suites to verify. Respect pre-commit gates.
+Follow the `implement` skill in **auto mode**: clean, small, typed, declarative,
+domain-modelled, concise-but-sufficient tests, zero warnings, fast verify. Do not
+run eval / integration suites to verify. Respect pre-commit gates.
+
+The stage splits across two models. **Design it yourself on opus** — the rules,
+the design notes and the challenge (`implement` Steps 1–2c) — because every later
+stage inherits those decisions. **The build** (Steps 3–6b) runs on the model the
+class names: at `mechanical`, `tiny` and `normal` hand it to one **sonnet**
+sub-agent per `implement` Step 2d, since the build uses more tokens than any other
+stage and by then there is nothing left to decide; at `elevated` and `production`
+build it yourself on opus, because there the contract is still settling as the
+producer is written. When a sonnet build returns, check its verify results and its
+note amendments yourself before the gate. A build that came back red goes to
+you, not back to sonnet for another try.
 
 Three gates inside that stage are the ones most easily skipped under time pressure,
 and **the risk class decides which of them this change earns** — `mechanical` and
@@ -387,7 +408,7 @@ thread, because the run has exceeded its expected shape:
 - the review fix loop reaches a third pass
 - a verification loop (evals, CI, browser) reaches a third iteration
 - more than about six sub-agents have run (the design challenge spends two of
-  them, so an `elevated` change reaches this sooner and legitimately)
+  them and a sonnet build one, so count those as expected rather than as drift)
 - you have been through every stage and are still not finished
 
 **Ending the session** is a separate decision from writing the doc, and a rarer

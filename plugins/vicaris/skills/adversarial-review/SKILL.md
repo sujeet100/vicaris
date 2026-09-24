@@ -112,8 +112,8 @@ fall back to `Step 2b`. Do not skip the review.
 ### Step 2a — Parity, for a mechanical change
 
 A mechanical change fails by being **incomplete, not by being ugly**: the field that reaches
-three of four consumers, the enum value with no `match` arm, the prompt updated for `US` and
-`UK` but not `CA`. A craft pass reads each touched file and reports that all of them are fine,
+three of four consumers, the enum value with no `match` arm, the prompt updated for two locales
+but not the third. A craft pass reads each touched file and reports that all of them are fine,
 which is true and useless — the defect is in the file nobody touched. So for `mechanical` the
 craft, architect and integration passes are not bought at all, and this runs instead.
 
@@ -151,8 +151,8 @@ content: the repo list with each path and resolved `BASE`, the changed-file stat
 `git -C "$repo" diff` for uncommitted work) across **every** repo and reads what it needs.
 
 - **Clean-code reviewer** — grade against `coding-principles.md` *and the repo's own convention
-  docs* (`docs/conventions/coding-conventions.md`, `testing.md`, or whatever `project-context.md`
-  names), citing the rule id in each finding (`§3.8 names reveal intent`) so a rule nothing grades
+  docs* (whatever `project-context.md` names, or the coding and testing conventions under
+  `docs/`), citing the rule id in each finding (`§3.8 names reveal intent`) so a rule nothing grades
   shows up as a finding with nothing to cite. Readability, naming, complexity, function and module
   size, declarative over imperative, pure functions, duplication, typing at boundaries, zero
   warnings. Over-engineering and nits-that-shipped are findings too.

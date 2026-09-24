@@ -8,218 +8,162 @@
 <h1 align="center">VICARIS</h1>
 <p align="center"><em>The one you send in your place.</em></p>
 
+Vicaris takes a development story and brings it back as reviewed, tested merge
+requests across every repository the story touches, together with a written
+record of every decision it made on the way. You give it a ticket key or a brief
+and walk away. It does not stop to ask you things; it decides each fork, writes
+down the reading it took and the one it rejected, and keeps you informed in a
+single Slack thread you can read whenever you like.
 
-An autonomous, end-to-end development workflow packaged as a Claude Code
-plugin, grounded in a captured statement of how Sujit likes code written and
-reviewed. It runs a task from a Jira key or brief all the way to a reviewed,
-tested, finalized change — deciding every fork itself and logging the
-assumption, pinging Slack only on a genuine external blocker.
+It is a Claude Code plugin, and it is opinionated: the code it writes and the
+reviews it runs are held to a captured statement of how Sujit likes code written
+(`references/coding-principles.md`), not to a generic idea of quality.
 
-## Identity
+```
+/vicaris PROJ-1234        # or a free-text brief
+```
 
-Vicaris is **the Familiar**: a compact black feline creature with amber eyes,
-drawn in the register of a Dark-type rather than a pet. A familiar is the one
-you send out to act in your place, so the premise needs no footnote, and the
-creature has two states that map onto the product's own. At rest it sits
-upright, tail hooked forward, ears up, brow plain. Working, it drops into a
-crouch, the ears rake back, the pupils draw to a tight V and a small amber seal
-surfaces on the brow.
+## What a run looks like
 
-The **mark** is the Familiar's head — two tall outward-raked ears, a wedge
-face and two amber wedges for eyes — because that is the part that still reads
-at sixteen pixels. It goes on the package, the CLI and the favicon. The full
-creature stays in hero art, release notes and slides, and is never asked to be
-a favicon, which is what usually ruins a mascot.
+The first thing you see is a Slack message naming the ticket, the repos in scope,
+the risk class, and the two to four acceptance criteria whose reading could be
+wrong, each with the reading Vicaris took. That message is the one point where
+correcting a misunderstanding is still free, so it is worth a glance; nothing
+waits for you to reply.
 
-| Asset | Use |
-|---|---|
-| `assets/vicaris-sigil.svg` | Primary mark, ink and amber, for light grounds |
-| `assets/vicaris-sigil-dark.svg` | Same mark with a bone hairline rim, for ink grounds |
-| `assets/vicaris-sigil-mono.svg` | One ink via `currentColor`, eyes as negative space; inverts with the theme |
-| `assets/vicaris-sigil-16.svg` | Favicon build; the mark was drawn on a 16 grid, so this is the same geometry |
-| `assets/vicaris-familiar-rest.svg` / `-rest-dark.svg` | The Familiar at rest, for illustration |
-| `assets/vicaris-familiar-working.svg` / `-working-dark.svg` | The Familiar working, seal on the brow |
+From there the thread ticks along at each stage boundary: understanding done, each
+repo built, review findings and how they were settled, test results, each MR as it
+goes up. It pings you directly only for the short, closed list of things it cannot
+do alone — an expired login, a missing credential, an irreversible product call —
+and even then it finishes everything that is not blocked.
 
-Palette: **Ink** `#15130F` for fur and text, **Ground** `#0B0A08` for dark
-surfaces, **Bone** `#EDE6D6` for paper and the rim, **Amber** `#C9963A` for
-the eyes, the seal and every accent. One gold only: amber and brass fight, so
-the eyes set the accent and the UI borrows it.
+What comes back is **the Record**:
 
-A black cat is the most obvious familiar there is, so a few details do the work
-of making it ours and are treated as fixed: the pupil is cut as a V, the ears
-are tall and raked out rather than bat-shaped, there is no collar, the seal
-appears on the brow only while working and never glows, the tail hooks and ends
-in a flat nib rather than a spear, and the paws are long-toed rather than big.
+- one MR per repo, cross-linked under the same ticket, each already through the
+  standalone MR reviewer;
+- a completion doc per run: what changed, every assumption with the alternative
+  it beat and why, what was tested and what was not;
+- the design notes beside the code in each repo, and a ledger of every review
+  finding with the decision taken on it.
 
-The four objects carry the workflow, which is why the mascot is worth having at
-all rather than being decoration:
-
-| Object | What it is |
-|---|---|
-| **The Writ** | the story entrusted to it |
-| **The Seal** | the boundaries it may act within — the hexagon-and-V on the Familiar's brow |
-| **The Familiar** | Vicaris itself |
-| **The Record** | the design notes, review and completion doc it hands back |
-
-The documentation stays plain — Vicaris takes a development story through
-understanding, design, implementation, testing and review. Only the identity
-speaks in the other register.
-
-## Pipeline
+## How it works
 
 ```
 /vicaris <task>
    │
-   ├─ understand      (fable)         acceptance criteria + the reading rejected for each
-   │                                  ambiguous one · contradictions · gaps · NFRs · repos ·
-   │                                  test surface · → RISK CLASS, which gates everything below
-   ├─ implement       (opus, auto)    design note per repo → design challenge → build in slices →
-   │                                  tests → simplification pass; clean, small, typed,
-   │                                  declarative, domain-modelled
-   │  └─ design-challenge (fable+opus) blind design from the ACs alone, compared against the
-   │                                  design note, before the first edit. elevated+ only
-   ├─ GATE            (scripts)       per-repo verify recorded · risk re-derived from the paths
-   │                                  actually touched (can only raise) · integrated smoke.
-   │                                  No reviewer is spawned until this is green
-   ├─ adversarial-review (opus)       passes bought by risk class: parity only at mechanical,
-   │                                  --quick at tiny, signals at normal, forced at elevated+.
-   │                                  repos reviewed in parallel · --also-repo for the seam ·
-   │                                  one AC pass (sonnet) · fix loop caps at 2
-   ├─ test                            reads the gate's verify results · browser leg risk-gated ·
-   │                                  logs/traces → Slack summary
-   └─ finalize        (opus)          completion doc (length by class) + MR per repo +
-                                      MR reviewer + status check + Slack wrap-up
+   ├─ understand         acceptance criteria, each ambiguous one with the reading
+   │                     rejected · gaps and contradictions · repos in scope ·
+   │                     non-functional constraints · → RISK CLASS
+   ├─ implement          design note per repo → design challenge (elevated+) →
+   │                     build in slices → tests → simplification pass
+   ├─ gate               every repo's verify green · risk re-derived from the
+   │                     paths actually touched · integrated smoke
+   ├─ adversarial-review craft, architect and integration passes per repo, plus
+   │                     one acceptance-criteria pass over the whole change
+   ├─ test               browser run of anything user-visible, logs and traces
+   └─ finalize           completion doc · MR per repo · MR review · wrap-up
 ```
 
-Every loop — review, test, MR review — stops after two fix passes and declares what
-is outstanding rather than starting a third. A review still multiplying findings
-after two passes is repairing a design, and patches will not settle that.
+A handful of ideas carry the design, and each exists because the obvious version
+failed.
 
-Each stage is also a standalone skill: `/understand`, `/implement`,
-`/design-challenge`, `/adversarial-review`, `/test`, `/handover`, `/finalize`.
+**Ceremony is bought by risk, not applied uniformly.** `understand` puts the change
+in one of five classes — `mechanical`, `tiny`, `normal`, `elevated`, `production` —
+and every later stage reads the class instead of deciding its own depth. A field
+threaded through an existing pattern gets a parity check that finds the fourth
+consumer nobody updated; a migration gets a design challenge, forced review passes,
+a rehearsed up-and-down and a rollback plan. The class is predicted from the story
+and then re-derived from the files actually touched, and it can only go up.
 
-The design challenge answers the one question no review pass can: was this the
-right thing to build? Craft, architect and integration all start from the diff, so
-all three inherit the decision the diff embodies. The challenge builds a second
-design from the acceptance criteria alone — blind to the plan, the design note and
-the branch — and holds the two together before any code exists, where a divergence
-costs a paragraph rather than a rework. It runs on cross-repo, structural and
-production-risk changes, and skips a local bug fix with a reason.
+**The design is challenged before any code exists.** Every review pass starts from
+the diff, so every review pass inherits the decision the diff embodies. At
+`elevated` and above, a second design is built from the acceptance criteria alone,
+by an agent that cannot see the plan, the notes or the branch, and the two are
+compared while a divergence still costs a paragraph rather than a rework.
 
-Review depth comes from the separate `mr-review` plugin, whose `review-changes`
-skill grades against the same charter the MR bot uses. `adversarial-review`
-drives it once per repo in the manifest and owns what is true of the change
-rather than of one repo: the repo set, the acceptance criteria and the seam
-between repos. Without that plugin the stage falls back to three inline
-reviewers and says so in the report.
+**Nothing expensive starts on code that has not earned it.** Reviewers are not
+spawned until every repo builds and passes its own suite, and every fix loop —
+review, test, MR review — stops after two passes and declares what is outstanding.
+A review still multiplying findings after two rounds is repairing a design, and a
+third round of patches will not settle that.
 
-Prose cleanup lives in the separate `byline` plugin, which owns `/de-ai` and the
-writing-voice skills. `vicaris` works without it; the doc-generating stages
-apply a short inline prose bar and defer to `/de-ai` when it is available.
+**Cross-repo is the normal case.** The repo set is pinned once, and from then on
+every stage covers all of it, in dependency order, with the contract between repos
+reviewed against its real callers. `scripts/vicaris-status.sh` fails the run if any
+repo has work without a verify result or an MR, so coverage is checked rather than
+remembered.
 
-## The references
+**It never asks.** Forks are resolved from `references/autonomy.md`, the same file
+every stage reads, so a question answered once is answered the same way everywhere.
+Scope is never quietly reduced; if part of the story is blocked, the rest ships in
+full and the remainder is recorded as follow-on.
 
-- **`references/autonomy.md`** — the contract (never ask a blocking question,
-  deliver the whole scope, the closed list of what actually reaches Sujit) and the
-  standing resolutions for the forks that come up most runs. It used to live in four
-  files and two copies had already drifted, so every stage now cites this one.
-- **`references/risk-classes.md`** — the five classes (`mechanical`, `tiny`,
-  `normal`, `elevated`, `production`), what puts a change in each, and the matrix of
-  which stages each one buys. `understand` predicts the class; the gate re-derives
-  it from the paths actually touched and can only raise it. This is what stops a
-  field addition costing what a migration costs, and what stops a migration being
-  treated like a field addition.
-- **`references/gates.md`** — what must be green before a reviewer is spawned, the
-  two-pass cap on every fix loop, the rule that findings are decided rather than
-  applied, and the ledger that makes a cap survive a compaction.
-- **`references/coding-principles.md`** — the language- and project-agnostic
-  standard (clean code, low complexity, SRP, declarative, pure functions,
-  domain modelling over primitives, rich models not anemic, SOLID/OOP/FP,
-  idiomatic modern constructs, zero warnings; the dogmatic avoids; testing and
-  collaboration style). Every stage reads it. **No product names live here.**
-- **`references/multi-repo.md`** — how a change spanning several repos is
-  handled, since that is the common case here. Defines the repo-set manifest the
-  plan writes and every later stage fans out over, the per-repo git invariants,
-  and the rule that binds it together: implement, review, test, fix, MR and
-  MR-review all cover **every** repo, one MR per repo, cross-linked. Also names
-  the failure unique to these changes, the contract *between* the diffs, and
-  keeps deploy-order thinking in scope.
-- **`references/notifications.md`** — the Slack drumbeat for an unattended run:
-  a milestone ping at every stage boundary (planning done, each repo implemented,
-  review started / found / resolved, testing, each MR, handover, complete), all
-  threaded under one parent message so the DM stays readable. Send-and-continue
-  only; a ping is never a question.
-- **`references/project-context.md`** — the *only* place project- and
-  product-specific detail lives: verify commands, prompt/framework conventions,
-  browser-app + login, SSO, observability, MR-reviewer command, Slack target.
-  Edit or replace it per project; the skills load it if present and skip
-  gracefully if not.
+**Losing context is a non-event.** A handover doc is refreshed at every stage
+boundary, and hooks re-inject the run's state after a compaction, so a long run
+survives both compaction and a fresh session.
 
-## Behaviour worth knowing
+### Models
 
-- **Autonomous.** Forks are decided (recommend + assumption + self-critique),
-  not asked. Only expired SSO / a missing credential / an irreversible product
-  call triggers a Slack DM, and the run continues with whatever isn't blocked.
-- **Models.** Planning runs on **fable**; implementation, review, and finalize
-  on **opus**. Run every stage at high reasoning effort.
-- **Stays awake.** The orchestrator starts a capped `caffeinate` so display /
-  system sleep can't stall a long run, and stops it at finalize. You can also
-  launch the whole session under `caffeinate -dimsu claude`.
-- **Multi-repo by default.** The plan pins the set of repos a change touches;
-  from there every stage covers all of them — branched off each repo's own fresh
-  `origin/HEAD`, reviewed as one diff plus the contract between them, one MR per
-  repo cross-linked under the same ticket, and the MR-review bot run on each.
-- **Context discipline.** The handover doc is refreshed at every stage boundary,
-  unconditionally, plus on four observable tripwires — a model cannot see its own
-  window usage, so a rule keyed to a percentage fails silently. A `PreCompact` hook
-  nudges when the doc is missing or stale, and a `SessionStart` hook re-injects the
-  manifest, the handover path and the Slack thread after a compaction.
-- **Secrets.** The browser login never routes a password through the
-  assistant's context (trufflehog-safe): Chrome autofill by default, with a
-  keychain→keystroke helper (`scripts/browser-login-helper.sh`) as a
-  sign-off-gated fallback.
+Judgement runs on **Opus**: understanding, design notes, the design comparison,
+review and finalize. The build runs on **Sonnet** at `mechanical`, `tiny` and
+`normal`, where the shape is already decided and the token volume is highest, and
+on Opus at `elevated` and `production`, where the contract is still settling as it
+is written. **Fable** runs only the blind designer, so the independent design comes
+from a different model than the notes it is checking. Run the session at high
+reasoning effort and set it explicitly, since Opus 5.5 defaults to `medium`.
 
-## The agents
+## Setup
 
-Two sub-agents ship as definitions in `agents/` rather than as inline prompts, for
-the same reason everything else here moved out of prose:
+```bash
+claude plugin marketplace add <path-to-this-repo>
+claude plugin install vicaris@sujit-marketplace
+```
 
-- **`blind-designer`** (fable, `Read, Grep, Glob`) — the design challenge's first
-  half. Its whole value is not having seen the plan, the design note or the branch,
-  and the definition grants no Bash, so it cannot run `git` or leave the extracted
-  pre-change tree even if it tries. Withholding by capability beats withholding by
-  instruction, because nothing downstream reports an agent that went looking.
-- **`acceptance-criteria`** (sonnet, read-only) — the whole-change criteria pass,
-  pinned to the model the charter actually runs it on.
+Vicaris is generic; everything specific to the project you point it at lives in
+one sidecar. Copy `references/project-context.template.md` to
+`references/project-context.md` and fill in the verify command, how to run and log
+into the app, observability, the MR reviewer and the Slack target. That file is
+gitignored so project detail never lands in this repo, and every stage runs
+without it, just with fewer shortcuts.
 
-Every other sub-agent stays an inline prompt. Turning those two into files removed
-a real failure mode; turning the rest into files would be paperwork.
+It expects, and says at the start of a run which of these are missing:
 
-## The scripts
+- Slack, Atlassian and a browser MCP (chrome-devtools) connected;
+- the `mr-review` plugin, which supplies the review charter and the design
+  challenge's two charters (without it both fall back to inline prompts);
+- a standalone MR reviewer, if you want MRs reviewed (see the sidecar).
 
-Four small deterministic pieces, because the invariants that matter should be able
-to fail a run rather than be repeated in prose:
+`byline`, if installed, is used for prose cleanup in the generated docs; nothing
+depends on it.
 
-- **`vicaris-risk.sh`** — observed risk class from the changed paths. Raises only,
-  never lowers, and refuses to classify from an absent diff.
-- **`vicaris-gate.sh`** — runs a repo's verify and records the verdict in
-  `<repo>/.vicaris/verify-<branch>.txt`, so later stages read a result instead of
-  re-running a suite.
-- **`vicaris-parity.sh`** — for a mechanical change, every existing instance of a
-  pattern marked TOUCHED or UNTOUCHED. Catches the fourth consumer nobody updated,
-  which is how these changes actually fail.
-- **`vicaris-status.sh`** — one row per repo with commits, verify and MR, exiting
-  non-zero on work that has no MR. The per-repo checklist, generated rather than
-  recalled.
-- **`mr-review-root.sh`** — locates the `mr-review` plugin's charter, overridable
-  with `VICARIS_MR_REVIEW_ROOT`.
+## Inside the plugin
 
-## Prerequisites
+Every stage is also a standalone skill, so you can run one on its own.
 
-- Slack MCP, Atlassian MCP, and a browser MCP (chrome-devtools) connected.
-- The `mr-review` plugin, for review depth and for the design challenge's two
-  charters. Without it both fall back to inline prompts and say so in the report.
-  Override the lookup with `VICARIS_MR_REVIEW_ROOT` if it lives somewhere unusual.
-- For MR review: the standalone reviewer installed with `GITLAB_TOKEN` set
-  (see `project-context.md`).
-- Set session reasoning effort to high.
+| | |
+|---|---|
+| **Skills** | `/vicaris` (the orchestrator), `/understand`, `/implement`, `/design-challenge`, `/adversarial-review`, `/test`, `/handover`, `/finalize` |
+| **References** | `autonomy` (the contract and standing resolutions) · `risk-classes` (what each class buys) · `gates` (what must be green, the two-pass cap) · `coding-principles` (the standard) · `multi-repo` (the manifest and per-repo invariants) · `notifications` (the Slack drumbeat) · `project-context.template` |
+| **Agents** | `blind-designer` (Fable, read-only, no shell, so it cannot see the branch) · `acceptance-criteria` (Sonnet, read-only) |
+| **Scripts** | `vicaris-risk.sh` (observed class, raise-only) · `vicaris-gate.sh` (records each repo's verify) · `vicaris-parity.sh` (every instance of a pattern, touched or not) · `vicaris-status.sh` (per-repo coverage) · `mr-review-root.sh` · `browser-login-helper.sh` (keychain login that keeps passwords out of the model's context) |
+| **Hooks** | `SessionStart` re-injects the run's state; `PreCompact` warns when the handover doc is stale |
+
+## Identity
+
+Vicaris is **the Familiar**, a compact black feline with amber eyes: the one you
+send out to act in your place. It has two states that match the product's own.
+At rest it sits upright with its tail hooked forward; working, it drops into a
+crouch, ears raked back, with a small amber seal on its brow. The **mark** is the
+head alone, because that is what still reads at sixteen pixels.
+
+| Asset | Use |
+|---|---|
+| `assets/vicaris-sigil.svg` | Primary mark, for light grounds |
+| `assets/vicaris-sigil-dark.svg` | Same mark with a bone rim, for dark grounds |
+| `assets/vicaris-sigil-mono.svg` | Single colour via `currentColor`, inverts with the theme |
+| `assets/vicaris-sigil-16.svg` | Favicon, same geometry on a 16 grid |
+| `assets/vicaris-familiar-rest.svg` / `-rest-dark.svg` | The Familiar at rest |
+| `assets/vicaris-familiar-working.svg` / `-working-dark.svg` | The Familiar working |
+
+Palette: Ink `#15130F`, Ground `#0B0A08`, Bone `#EDE6D6`, Amber `#C9963A`. The
+full identity rules live in the repository's `CLAUDE.md`.

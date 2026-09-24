@@ -20,14 +20,14 @@ why: <one line — the trigger that set it>
 
 **`mechanical`** — the change repeats a shape the repo already has, and introduces
 no new concept. A field added to an existing DTO and threaded to its consumers, a
-value added to an enum, a region file mirroring the two beside it, a new row in a
+value added to an enum, a locale file mirroring the two beside it, a new row in a
 config map, a rename, a dependency version bump. The test is whether you can point
 at the existing instances it copies. If you can, and nothing in the change is
 novel, it is mechanical.
 
 The failure mode of a mechanical change is **incompleteness, not quality**: the
 field that reaches three of four consumers, the enum value with no `match` arm, the
-prompt updated for `US` and not `UK`. Craft review is close to worthless here and a
+prompt updated for one locale and not the other. Craft review is close to worthless here and a
 parity check is close to sufficient, which is why the two are swapped for this class
 rather than both being run.
 
@@ -56,6 +56,7 @@ migration checks, plus a completion doc that carries a rollback plan.
 | Understand — full NFR table | short form | short form | ✓ | ✓ | ✓ |
 | Design note (`implement` 2b) | skip | skip | ✓ | ✓ | ✓ |
 | Design challenge | skip | skip | skip | ✓ | ✓ |
+| Build model (`implement` 3–6b) | sonnet | sonnet | sonnet | opus | opus |
 | Parity check | **required** | — | where a part repeats a pattern | where a part repeats a pattern | **required** |
 | Deterministic gates | ✓ | ✓ | ✓ | ✓ | ✓ |
 | Regression test proving the fix | — | **required** | where a bug is fixed | where a bug is fixed | where a bug is fixed |
@@ -72,6 +73,17 @@ migration checks, plus a completion doc that carries a rollback plan.
 The MR row is deliberately uniform. Every change gets an MR and the standalone
 reviewer runs on it, so even the class that skips local review has one independent
 look before a human is asked for theirs.
+
+The build-model row is the one that moves the most money. The build is the stage
+that uses the most tokens — long tool loops, file reads, test-and-fix cycles — and at
+`normal` and below the shape has already been decided on opus, in the design note
+or in the rules and exemplars named before it, so what is left is execution against
+a decision someone else made, which sonnet does at half the price. At `elevated` and
+`production` the build keeps making decisions: the contract's detail firms up while
+the producer is written, and a wrong call there crosses a repo boundary before any
+reviewer sees it, so the build stays on opus. Design, review and the design
+comparison run on opus at every class; the model saving is taken only where
+judgement is not the thing being bought.
 
 Translating the review row into flags, since that is where it is applied:
 
@@ -105,4 +117,7 @@ class is wrong and nobody notices, and a false positive costs one extra review p
 while a false negative costs the review that would have caught it. When the observed
 class is higher, say so in the Slack thread and run the stages the new class earns —
 including the design challenge, late and out of order, because late is better than
-not at all.
+not at all. A raise does **not** re-run a build that sonnet already finished: the
+forced opus review passes the higher class buys are how that build gets held to the
+bar, and rebuilding working code to change who typed it buys nothing a review
+cannot.

@@ -1,6 +1,6 @@
 ---
 name: understand
-description: Establish what a change has to be true of before anyone designs or builds it — acceptance criteria with the readings rejected, contradictions and gaps in the story, the repos in scope and the contract between them, the non-functional constraints, and the risk class that decides how much ceremony the rest of the run earns. Replaces the old plan stage. Runs on fable.
+description: Establish what a change has to be true of before anyone designs or builds it — acceptance criteria with the readings rejected, contradictions and gaps in the story, the repos in scope and the contract between them, the non-functional constraints, and the risk class that decides how much ceremony the rest of the run earns. Replaces the old plan stage. Runs on opus.
 argument-hint: [Jira key, task description, or feature brief]
 allowed-tools: Bash, Read, Write, Glob, Grep, Agent, mcp__claude_ai_Atlassian__getJiraIssue, mcp__claude_ai_Atlassian__searchJiraIssuesUsingJql, mcp__claude_ai_Atlassian__getJiraIssueRemoteIssueLinks, mcp__claude_ai_Atlassian__getConfluencePage, mcp__claude_ai_Atlassian__searchConfluenceUsingCql, mcp__claude_ai_Atlassian__getPagesInConfluenceSpace, mcp__claude_ai_Atlassian__getConfluencePageDescendants, mcp__claude_ai_Atlassian__getConfluenceSpaces
 ---
@@ -19,10 +19,10 @@ nothing else does — reading the story properly, finding what it fails to say,
 and naming the repos. That is this stage. The shape is decided in `implement`
 Step 2b and challenged in `design-challenge`.
 
-**Model:** fable, high reasoning effort. The orchestrator spawns this stage with
-`model: fable`; running `/understand` directly on another model should delegate
-to a fable sub-agent, because reading a story closely is exactly the work the
-planning model is cheap and good at.
+**Model:** opus, high reasoning effort. The orchestrator spawns this stage with
+`model: opus`; running `/understand` directly on another model should delegate
+to an opus sub-agent. A criterion misread here survives a flawless build and a
+clean review, so this is judgement work and it does not go to the build model.
 
 ## Step 1 — Load the bar
 

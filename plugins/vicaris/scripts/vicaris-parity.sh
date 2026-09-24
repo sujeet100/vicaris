@@ -5,7 +5,7 @@
 #
 # A mechanical change fails by being incomplete, not by being ugly: the field that
 # reaches three of four consumers, the enum value with no `match` arm, the prompt
-# updated for US and not UK. Craft review barely sees that; this does, and it is a
+# updated for one locale and not the other. Craft review barely sees that; this does, and it is a
 # grep rather than an agent.
 #
 # The judgement stays with the caller. This answers "where does the pattern live and

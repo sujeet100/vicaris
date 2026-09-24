@@ -4,14 +4,14 @@ Sujit's personal Claude Code plugin marketplace.
 
 ## Plugins
 
-- **Vicaris** — autonomous end-to-end dev workflow (plan → implement →
-  adversarial review → test → finalize), grounded in Sujit's coding
-  principles. See [`plugins/vicaris/README.md`](plugins/vicaris/README.md).
+- **Vicaris** — sends a story in your place and brings back reviewed, tested
+  MRs across every repo it touches (understand → implement → review → test →
+  finalize), grounded in Sujit's coding principles. See [`plugins/vicaris/README.md`](plugins/vicaris/README.md).
 
 ## Install
 
 ```bash
-claude plugin marketplace add ~/projects/personal/vicaris
+claude plugin marketplace add <path-to-this-repo>
 claude plugin install vicaris@sujit-marketplace
 ```
 
@@ -30,7 +30,8 @@ claude plugin update vicaris@sujit-marketplace
 
 ## Per-project setup
 
-The plugin is generic. Anything project- or product-specific lives in one file:
-`plugins/vicaris/references/project-context.md`. Edit it for the project you're
-working in (verify command, app/login, SSO, observability, MR-reviewer path,
-Slack target). Delete sections that don't apply.
+The plugin is generic. Anything project- or product-specific lives in one
+gitignored file: copy `plugins/vicaris/references/project-context.template.md`
+to `project-context.md` beside it and fill it in for the project you're working
+in (verify command, app/login, SSO, observability, MR-reviewer path, Slack
+target). Delete sections that don't apply.

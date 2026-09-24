@@ -127,6 +127,13 @@ decides to. Withholding by instruction and withholding by capability look the sa
 right up until an agent drifts, and nothing downstream reports that it read what
 you asked it not to.
 
+The model is part of the same isolation. The design notes were written on opus, and
+a second design from the same model tends to make the same root choices for the
+same reasons, which turns the comparison into agreement with itself. Fable makes
+different mistakes, and that is what makes it worth comparing against. So keep
+the blind designer on a different model from whoever wrote the notes, even where
+it costs more than the pass it is checking.
+
 Its prompt then carries only facts: the acceptance criteria, the extracted paths
 under `$WORK`, and `$MRR/charter/blind_design.md` as the path to follow.
 

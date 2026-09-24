@@ -100,11 +100,11 @@ Before moving on, run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/vicaris-status.sh"`.
 It exits non-zero on a repo that has commits and no MR, which is the one state
 that looks finished and ships nothing.
 
-**If the change touched prompts**, the component eval is mandatory and runs on
-the MR pipeline (never locally). Per the sidecar, trigger the **manual** eval
-job for each affected component on **each MR's** pipeline and monitor it to
-green; fold any eval regression back through implement → review before the task
-is done.
+**If the change touched prompts and the sidecar names an eval gate**, run it
+where the sidecar says — typically a job on **each MR's** pipeline — and monitor
+it to green; fold any eval regression back through implement → review before the
+task is done. With no eval named, say in the completion doc that the prompt change
+went unevaluated rather than leaving it implied.
 
 ## Step 3 — MR review, on every MR
 

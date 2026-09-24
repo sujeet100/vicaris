@@ -1,26 +1,35 @@
 ---
 name: implement
-description: Implement an approved plan in auto mode, writing to Sujit's coding principles — clean, small, typed, declarative, well-tested. Runs on opus at high effort.
+description: Implement an approved plan in auto mode, writing to Sujit's coding principles — clean, small, typed, declarative, well-tested. Designs on opus; builds on sonnet through the normal risk class and on opus above it, at high effort.
 argument-hint: [path to plan, or the task if planning already happened in-session]
-allowed-tools: Bash, Read, Write, Edit, Glob, Grep, Skill, mcp__claude_ai_Slack__slack_send_message, mcp__claude_ai_Atlassian__getJiraIssue, mcp__claude_ai_Atlassian__searchJiraIssuesUsingJql, mcp__claude_ai_Atlassian__getJiraIssueRemoteIssueLinks, mcp__claude_ai_Atlassian__getConfluencePage, mcp__claude_ai_Atlassian__searchConfluenceUsingCql, mcp__claude_ai_Atlassian__getPagesInConfluenceSpace, mcp__claude_ai_Atlassian__getConfluencePageDescendants, mcp__claude_ai_Atlassian__getConfluenceSpaces
+allowed-tools: Bash, Read, Write, Edit, Glob, Grep, Skill, Agent, mcp__claude_ai_Slack__slack_send_message, mcp__claude_ai_Atlassian__getJiraIssue, mcp__claude_ai_Atlassian__searchJiraIssuesUsingJql, mcp__claude_ai_Atlassian__getJiraIssueRemoteIssueLinks, mcp__claude_ai_Atlassian__getConfluencePage, mcp__claude_ai_Atlassian__searchConfluenceUsingCql, mcp__claude_ai_Atlassian__getPagesInConfluenceSpace, mcp__claude_ai_Atlassian__getConfluencePageDescendants, mcp__claude_ai_Atlassian__getConfluenceSpaces
 ---
 
 # Implement
 
 Build the change described by the plan (`$ARGUMENTS`, or the in-session plan).
 
-**Model / mode:** opus, high reasoning effort, **auto mode** — proceed through
-the implementation without stopping for confirmation at each step. Stop only
-for a genuine fork the plan didn't settle, or a discovery that invalidates the
-plan.
+**Model / mode:** high reasoning effort, **auto mode** — proceed through the
+implementation without stopping for confirmation at each step. Stop only for a
+genuine fork the plan didn't settle, or a discovery that invalidates the plan.
+
+The stage runs on two models, split where the kind of work changes. **Steps 1–2c
+are design and run on opus**: naming the rules, choosing the shape, and holding it
+against the challenge are the decisions everything after them inherits. **Steps
+3–6b are the build and run on the model the risk class names** — sonnet at
+`mechanical`, `tiny` and `normal`, opus at `elevated` and `production`
+(`${CLAUDE_PLUGIN_ROOT}/references/risk-classes.md` has the reasoning). Step 2d is
+the handoff between them. Run standalone on another model, do Steps 1–2c on an opus
+sub-agent or switch to opus first; don't design on the build model because it
+happens to be the session's.
 
 ## Step 1 — Name the bar for *this* change
 
 Read `${CLAUDE_PLUGIN_ROOT}/references/coding-principles.md` and
 `${CLAUDE_PLUGIN_ROOT}/references/project-context.md` (if present), plus the
-project's `CLAUDE.md` **and the project's own convention docs** — in this
-codebase `docs/conventions/coding-conventions.md` and `testing.md`, whose rules
-are narrower and more specific than the plugin's principles. These are the
+project's `CLAUDE.md` **and the project's own convention docs** — whatever the
+sidecar names, or the coding and testing conventions the repo keeps under `docs/`
+— whose rules are narrower and more specific than the plugin's principles. These are the
 standard the review stage grades you against.
 
 Then do the part that actually changes the code you write. Having the rules in
@@ -38,7 +47,9 @@ briefly, in the run, not in a file:
    and where a rule pulls against another, which wins and why.
 
 Keep this list where you can see it; Step 3's self-check grades against it.
-Don't edit anything until it exists.
+Don't edit anything until it exists. When Step 2d hands the build to another
+model, this list goes with it verbatim — it is the design at `mechanical` and
+`tiny`, where no note is written.
 
 ## Step 2 — Load the repo set
 
@@ -148,6 +159,33 @@ again after it returns** rather than building from what you wrote before it ran.
 Where it declined a divergence, the reason is in the note too, and that is the line
 the review stage will weigh if a reviewer proposes the same thing later.
 
+## Step 2d — Hand the build to the build model
+
+Read the class from `<primary-repo>/.vicaris/risk-<branch>.txt`. At `elevated` and
+`production`, carry on yourself on opus into Step 3. At `mechanical`, `tiny` and
+`normal`, spawn **one** sub-agent with `subagent_type: general-purpose` and
+`model: sonnet` to run Steps 3–6b across the whole manifest. Never `fork`: a fork
+always runs on the parent's model, so it would quietly keep the build on opus.
+
+The agent starts with none of your context, so its prompt carries everything the
+build must not re-decide:
+
+- the path to this skill, and the instruction to follow Steps 3–6b in auto mode,
+  including the per-repo Slack pings and the gate script in Step 6;
+- the manifest path, the branch, and the dependency order;
+- the Step 1 list — applicable rules, exemplars, rule per decision — verbatim;
+- every repo's `design-notes-<branch>.md` path, as amended by the challenge, with
+  the rule that the note is the design: where building shows it is wrong, amend the
+  note and say why in the report rather than drifting from it silently;
+- the test surface from `<primary-repo>/.vicaris/understanding-<branch>.md` and
+  any prompt-change constraints from the sidecar.
+
+When it returns, read its report and each repo's `verify-<branch>.txt` rather than
+taking the summary on trust, then re-read the design notes for amendments before
+handing off. A build that came back red or with an unexplained departure from its
+note is not handed to review: fix it yourself on opus, since the cheap attempt has
+already been spent.
+
 ## Step 3 — Build it, one slice at a time
 
 Work in **coherent slices**, not file by file and not function by function. A
@@ -206,12 +244,12 @@ mocks; mock only unavoidable seams.
 ## Step 5 — Prompt changes (if any)
 
 If the change touches prompts or structured-output field descriptions, follow
-the prompt conventions in `project-context.md`: read the whole stitched prompt
-first, no patchwork (consolidate into the canonical home), keep region and
-agency prompts in sync and note what you checked, no internal references in
-anything the model sees, and never hard-code a system prompt in code. Do not
-run evals locally — the component eval is mandatory but runs as a manual job on
-the MR pipeline at finalize (see the sidecar).
+the prompt conventions in `project-context.md`: read the whole assembled prompt
+first, no patchwork (consolidate into the canonical home), keep every variant of
+a prompt that must move together in sync and note which ones you checked, no
+internal references in anything the model sees, and never hard-code a system
+prompt in code. Run evals only where and how the sidecar says; if it gates prompt
+changes on an eval in CI, that runs at finalize, not here.
 
 ## Step 6 — Verify every repo you touched
 
