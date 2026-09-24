@@ -1,86 +1,54 @@
 ---
 name: understand
-description: Establish what a change has to be true of before anyone designs or builds it — acceptance criteria with the readings rejected, contradictions and gaps in the story, the repos in scope and the contract between them, the non-functional constraints, and the risk class that decides how much ceremony the rest of the run earns. Replaces the old plan stage. Runs on opus.
+description: Establish what a change must satisfy before design — acceptance criteria with rejected readings, gaps, repos in scope, constraints — and set its risk class.
 argument-hint: [Jira key, task description, or feature brief]
 allowed-tools: Bash, Read, Write, Glob, Grep, Agent, mcp__claude_ai_Atlassian__getJiraIssue, mcp__claude_ai_Atlassian__searchJiraIssuesUsingJql, mcp__claude_ai_Atlassian__getJiraIssueRemoteIssueLinks, mcp__claude_ai_Atlassian__getConfluencePage, mcp__claude_ai_Atlassian__searchConfluenceUsingCql, mcp__claude_ai_Atlassian__getPagesInConfluenceSpace, mcp__claude_ai_Atlassian__getConfluencePageDescendants, mcp__claude_ai_Atlassian__getConfluenceSpaces
 ---
 
 # Understand
 
-**Owner:** ${user_config.owner_name}. This run acts for them, and wherever this skill
-or a reference says "the owner", it means them. Slack DMs and pings go to Slack
-member `${user_config.slack_user_id}`; if that is blank, use the Slack target in
-`project-context.md`, and if neither exists, record Slack as unavailable in the
-run's degraded list rather than guessing a recipient.
+**Owner:** ${user_config.owner_name}, the person this run acts for ("the owner" here
+and in the references). Slack goes to member `${user_config.slack_user_id}`, else the
+sidecar's Slack target, else record Slack as unavailable in the degraded list.
 
 Establish what `$ARGUMENTS` has to be true of, and how much ceremony the rest of
-the run earns. This stage reads and decides; it does not design and it does not
-edit code.
+the run earns. Read and decide; do not design or edit code.
 
-The design used to live here, and it moved for a reason worth knowing: the plan
-settled an approach, then `implement` re-decided the shape at the keyboard
-because that is where the shape is actually chosen, and the plan's file list was
-stale by the second slice. What the plan was uniquely good at was the part
-nothing else does — reading the story properly, finding what it fails to say,
-and naming the repos. That is this stage. The shape is decided in `implement`
-Step 2b and challenged in `design-challenge`.
-
-**Model:** opus, high reasoning effort. The orchestrator spawns this stage with
-`model: opus`; running `/understand` directly on another model should delegate
-to an opus sub-agent. A criterion misread here survives a flawless build and a
-clean review, so this is judgement work and it does not go to the build model.
+**Model:** opus, high effort. Run directly on another model, delegate to an opus
+sub-agent.
 
 ## Step 1 — Load the bar
 
-Read, in this order: `${CLAUDE_PLUGIN_ROOT}/references/autonomy.md` (this stage
-decides every fork rather than handing back a menu — including the ambiguous
-criteria, which get a chosen reading and a rejected one, never a question),
-`${CLAUDE_PLUGIN_ROOT}/references/coding-principles.md`,
-`${CLAUDE_PLUGIN_ROOT}/references/risk-classes.md` (this stage sets the class
-every later stage reads), `${CLAUDE_PLUGIN_ROOT}/references/multi-repo.md`,
-`${CLAUDE_PLUGIN_ROOT}/references/project-context.md` if present, and the
-project's own `CLAUDE.md` and convention docs.
+Read `${CLAUDE_PLUGIN_ROOT}/references/` `autonomy.md`, `coding-principles.md`,
+`risk-classes.md`, `multi-repo.md` and `project-context.md` (if present), plus the
+project's `CLAUDE.md` and convention docs. This stage runs as a sub-agent, so read
+all of them; none is in your context yet.
 
 ## Step 2 — Establish what has to be true
 
-If `$ARGUMENTS` is a Jira key, fetch the story. Then **follow it out to
-Confluence**: check the issue's remote links and its description for pages, and
-read the ones that bear on this change. The story is usually the thinnest
-statement of the requirement and the page is where the reasoning lives, so a
-change built on the ticket alone re-derives decisions the team already made.
-Search by the ticket key and the feature name when nothing is linked.
+If `$ARGUMENTS` is a Jira key, fetch the story and **follow it to Confluence**
+(remote links, pages in the description; search by key and feature name if none
+are linked). Then read the code the change touches before concluding anything.
 
-Then read the code the change touches — the seams, the domain, the current
-behaviour — before concluding anything about what is being asked.
-
-Produce the acceptance criteria as a **numbered list**, each one a statement
-that is either true or false of the finished system. Quote the ones the story
-states. Say so, and say from what, for the ones you derived.
+Write the acceptance criteria as a **numbered list** of statements true or false
+of the finished system; quote stated ones, and mark derived ones with their source.
 
 **For every criterion that admits more than one reading, write the reading you
-are taking and the reading you are rejecting, one line each.** This is the most
-valuable thing this stage produces and it is not hedging. Nothing downstream can
-ask a question, so a misread criterion is invisible until the completion doc,
-by which point acting on it costs a rework. A rejected reading sitting next to
-the chosen one is what lets a human scan the Slack message and catch the
-misunderstanding in ten seconds instead.
+are taking and the one you are rejecting, one line each.** Nothing downstream can
+ask, so this is what lets a human catch a misreading from the Slack message.
 
 Then, in their own short sections:
 
-- **Contradictions** — any two criteria that cannot both hold, or a criterion
-  the current code already contradicts. Name both sides and say which you are
-  proceeding on.
-- **Gaps** — what the story does not say that the implementation must decide
-  anyway: empty states, limits, permissions, ordering, what happens to data that
-  already exists, what the user sees when it fails.
-- **Sources** — every Confluence page and code path you used. "None found" is an
-  answer; leaving it ambiguous whether you looked is not.
+- **Contradictions** — criteria that cannot both hold, or that current code
+  contradicts; name both sides and which you proceed on.
+- **Gaps** — what the implementation must decide that the story does not say:
+  empty states, limits, permissions, ordering, existing data, failure UX.
+- **Sources** — every page and code path used, or "none found".
 
 ## Step 3 — Non-functional constraints
 
-Answer only the rows that apply to this change. One line each; `n/a` plus the
-reason is an answer, a blank is a finding. These answers feed Step 4 directly,
-which is why they come before it rather than after.
+Answer only the rows that apply, one line each; `n/a` plus reason is an answer,
+a blank is a finding.
 
 | The change touches… | State |
 |---|---|
@@ -96,9 +64,8 @@ which is why they come before it rather than after.
 
 ## Step 4 — Classify the risk, and write it down
 
-Read `references/risk-classes.md` and emit exactly one class:
-`mechanical`, `tiny`, `normal`, `elevated` or `production`. Write it to the file
-every later stage reads:
+Emit exactly one class from `references/risk-classes.md` — `mechanical`, `tiny`,
+`normal`, `elevated` or `production` — to the file every later stage reads:
 
 ```bash
 PRIMARY=$(git rev-parse --show-toplevel); BRANCH=$(git rev-parse --abbrev-ref HEAD)
@@ -109,17 +76,8 @@ why: <one line — the trigger that set it>
 EOF
 ```
 
-Two habits keep this honest. **Default upward** when a change sits between two
-classes: one extra review pass is cheaper than the one that was skipped. And
-**say `mechanical` only when you can point at the instances the change copies** —
-that class exists for a change that repeats a shape already in the repo, and it
-buys a parity check instead of a craft pass, so claiming it for a change that
-introduces a new concept removes the review that would have caught it.
-
-The class is checked again after implementation, deterministically, from the
-paths actually touched (`scripts/vicaris-risk.sh`), and that check can only
-raise it. So a prediction that is slightly low is recoverable; one that is
-confidently low and never revisited is not.
+**Default upward** between two classes. **Say `mechanical` only when you can
+point at the instances the change copies** — it drops the craft pass.
 
 ## Step 5 — Repos in scope
 
@@ -131,41 +89,25 @@ producer before consumer, each with its freshness (`current` /
 git fetch --prune origin && git status -sb   # look for "behind"
 ```
 
-This list becomes the manifest every later stage fans out over, so a repo you
-omit gets no branch, no review and no MR. Where the change spans repos, state
-the **contract** between them and whether the MRs can merge in any order. Don't
-design the contract here — name that it exists, who owns it, and what it has to
-carry. Its shape is settled in `implement` Step 2b, where both sides are in view.
-
-If a repo is behind and you cannot bring it current, say so rather than reasoning
-about code you have not read.
+This becomes the manifest; an omitted repo gets no branch, review or MR. Across
+repos, name the **contract** — who owns it, what it carries — and whether the MRs
+can merge in any order, without designing it. A repo you cannot bring current is
+reported, not reasoned about.
 
 ## Step 6 — The test surface
 
-Name the tests the change needs, **derived from the acceptance criteria and the
-failure modes in Step 3, not from the design**. This ordering is the whole point:
-tests written after the implementation, by the pass that wrote it, tend to assert
-what the code does rather than what the story asked for, and a test pinned to a
-criterion survives the implementation changing shape.
-
-One line each. Where a criterion cannot be tested, say why — that is usually a
-sign the criterion is not yet a statement that can be false.
+Name the tests the change needs, one line each, **derived from the acceptance
+criteria and the Step 3 failure modes, not from a design**. Where a criterion
+cannot be tested, say why.
 
 ## Step 7 — Emit the understanding
 
-Write `<primary-repo>/.vicaris/understanding-<branch>.md`. Both hooks look
-there, so a resumed or compacted session finds it. Scratch — don't commit it,
-don't cite it in a commit message.
+Write `<primary-repo>/.vicaris/understanding-<branch>.md` (the hooks look
+there). Scratch — never committed or cited in a commit message.
 
 Sections, in this order: Goal · Acceptance criteria with rejected readings ·
 Contradictions · Gaps · Non-functional constraints · Risk class and why · Repos
 in scope, contract, merge order · Test surface · Sources.
 
-**Do not list the files to change.** That list is stale by the second slice, it
-locks the implementation before the design stage has run, and its absence has
-never once cost a run anything.
-
-Keep it short and scannable. The orchestrator posts the acceptance criteria, the
-assumptions that could be wrong, and the risk class as the run's opening Slack
-message, so this document is written to be read by someone deciding in fifteen
-seconds whether the run has understood the job.
+**Do not list the files to change.** Keep it short: it feeds the run's opening
+Slack message.

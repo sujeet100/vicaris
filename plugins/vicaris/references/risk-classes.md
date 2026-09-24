@@ -1,14 +1,8 @@
 # Risk classes — what ceremony a change earns
 
-One workflow for every change is the expensive kind of wrong. A field added to a
-response and a migration that drops a column are not the same engineering problem,
-and putting both through a design challenge, three opus review passes and a browser
-run spends most of the budget on the change that needed least of it — while telling
-you nothing extra about the one that needed most.
-
-So the change gets classified once, early, and every later stage reads the class
-instead of deciding its own depth. The class lives in one small file that survives
-compaction and is re-injected on resume:
+The change is classified once, early, and every later stage reads the class
+instead of deciding its own depth. The class lives in one file, re-injected on
+resume:
 
 ```
 <primary-repo>/.vicaris/risk-<branch>.txt
@@ -18,36 +12,28 @@ why: <one line — the trigger that set it>
 
 ## The five classes
 
-**`mechanical`** — the change repeats a shape the repo already has, and introduces
-no new concept. A field added to an existing DTO and threaded to its consumers, a
-value added to an enum, a locale file mirroring the two beside it, a new row in a
-config map, a rename, a dependency version bump. The test is whether you can point
-at the existing instances it copies. If you can, and nothing in the change is
-novel, it is mechanical.
+**`mechanical`** — repeats a shape the repo already has and introduces no new
+concept: a field threaded through an existing DTO's consumers, an enum value, a
+locale file mirroring the two beside it, a config-map row, a rename, a dependency
+bump. The test: can you point at the existing instances it copies, with nothing
+novel? Its failure mode is **incompleteness, not quality** — the field that reaches
+three of four consumers, the enum value with no `match` arm, the prompt updated for
+one locale and not the other — so a parity check replaces craft review.
 
-The failure mode of a mechanical change is **incompleteness, not quality**: the
-field that reaches three of four consumers, the enum value with no `match` arm, the
-prompt updated for one locale and not the other. Craft review is close to worthless here and a
-parity check is close to sufficient, which is why the two are swapped for this class
-rather than both being run.
+**`tiny`** — small and local but not pattern-repeating: a one-line bug fix with a
+nameable root cause, a guard clause, a corrected boundary. It keeps a craft pass and
+earns a regression test that fails without the fix.
 
-**`tiny`** — small, local, but not pattern-repeating: a one-line bug fix with a root
-cause you can name, a guard clause, a corrected boundary condition. It has quality
-risk that a parity check cannot see, so it keeps a craft pass, and it earns a
-regression test that fails without the fix.
+**`normal`** — ordinary product work: several files, real business logic, a design
+worth writing down. The default when nothing else fits; default up, not down.
 
-**`normal`** — ordinary product work. Several files, real business logic, a design
-worth writing down and a shape worth reviewing. This is the default when nothing
-else fits, and defaulting up rather than down is deliberate.
-
-**`elevated`** — the change crosses a component or repo boundary, introduces a
-structural unit, or ticks any non-functional row in the understanding document.
-It earns the design challenge, because these are the changes where a wrong root
-decision is both likely and expensive.
+**`elevated`** — crosses a component or repo boundary, introduces a structural unit,
+or ticks any non-functional row in the understanding document. It earns the design
+challenge.
 
 **`production`** — data can be destroyed, access can be widened, money can move, or
 rolling back needs a deploy. Everything `elevated` gets, plus the parity and
-migration checks, plus a completion doc that carries a rollback plan.
+migration checks, plus a completion doc with a rollback plan.
 
 ## What each class runs
 
@@ -70,54 +56,28 @@ migration checks, plus a completion doc that carries a rollback plan.
 | Completion doc | five lines | short | ✓ | ✓ | ✓ + rollback plan |
 | MR + standalone MR review | ✓ | ✓ | ✓ | ✓ | ✓ |
 
-The MR row is deliberately uniform. Every change gets an MR and the standalone
-reviewer runs on it, so even the class that skips local review has one independent
-look before a human is asked for theirs.
+**Build model.** At `normal` and below the build's shape is already decided on
+opus — in the design note, or in the rules and exemplars named before it — so
+sonnet executes it, at half the price, in the stage that uses the most tokens. At `elevated`
+and `production` the contract still firms up while the producer is written, and a
+wrong call crosses a repo boundary before any reviewer sees it, so the build stays
+on opus. Design, review and the design comparison run on opus at every class.
 
-The build-model row is the one that moves the most money. The build is the stage
-that uses the most tokens — long tool loops, file reads, test-and-fix cycles — and at
-`normal` and below the shape has already been decided on opus, in the design note
-or in the rules and exemplars named before it, so what is left is execution against
-a decision someone else made, which sonnet does at half the price. At `elevated` and
-`production` the build keeps making decisions: the contract's detail firms up while
-the producer is written, and a wrong call there crosses a repo boundary before any
-reviewer sees it, so the build stays on opus. Design, review and the design
-comparison run on opus at every class; the model saving is taken only where
-judgement is not the thing being bought.
-
-Translating the review row into flags, since that is where it is applied:
-
-| Class | `review-changes` invocation |
-|---|---|
-| `mechanical` | not invoked — the parity check replaces it |
-| `tiny` | `--quick --yes` |
-| `normal` | `--yes` — the mapper's signals decide architect and integration |
-| `elevated` | `--yes --architect --integration` |
-| `production` | `--yes --architect --integration` |
-
-Never pass `--only`. It replaces the default pass set outright, which switches off
-the conditionality the mapper computes from the diff, and that conditionality is
-doing the same job as this table one level down.
+The review row becomes `review-changes` flags in `adversarial-review` Step 2.
 
 ## Classified twice, and only ever upward
 
-**Predicted**, by the `understand` stage, from the story and its own non-functional
-answers. This is what gates the stages that run before there is a diff — the design
-note and the design challenge — and it is a judgement, because nothing else is
-available yet.
+**Predicted**, by `understand`, from the story and its non-functional answers. It
+gates the stages that run before there is a diff — the design note and the design
+challenge.
 
-**Observed**, by `scripts/vicaris-risk.sh`, from the paths the change actually
-touched, at the gate before review. It is crude on purpose: path patterns for
-migrations, authorisation, money, concurrency, infrastructure, dependency manifests,
-public contracts and prompts. It can **raise** the class and never lower it.
+**Observed**, by `scripts/vicaris-risk.sh`, from the paths actually touched, at the
+gate before review. Crude on purpose: path patterns for migrations, authorisation,
+money, concurrency, infrastructure, dependency manifests, public contracts and
+prompts. It can **raise** the class and never lower it: a false positive costs one
+review pass, a false negative the review that would have caught it.
 
-That asymmetry is the whole point of running it twice. A story that reads like a
-small change and turns out to touch a migration is the exact case where a predicted
-class is wrong and nobody notices, and a false positive costs one extra review pass
-while a false negative costs the review that would have caught it. When the observed
-class is higher, say so in the Slack thread and run the stages the new class earns —
-including the design challenge, late and out of order, because late is better than
-not at all. A raise does **not** re-run a build that sonnet already finished: the
-forced opus review passes the higher class buys are how that build gets held to the
-bar, and rebuilding working code to change who typed it buys nothing a review
-cannot.
+When the observed class is higher, say so in the Slack thread and run the stages the
+new class earns — including the design challenge, late and out of order. A raise
+does **not** re-run a build sonnet already finished; the forced opus review passes
+the higher class buys are how that build is held to the bar.

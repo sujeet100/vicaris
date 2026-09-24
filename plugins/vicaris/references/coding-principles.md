@@ -1,13 +1,9 @@
 # Coding Principles — Sujit
 
-The canonical statement of how code should be written and reviewed in this
-workflow. Every stage reads this: **plan** designs against it, **implement**
-writes to it, **adversarial review** grades by it.
-
-This file is deliberately language- and project-agnostic. Anything specific to
-a particular codebase — verify commands, which test suites to avoid, prompt or
-framework conventions, deployment or auth specifics — lives in the
-`project-context.md` sidecar, which each stage loads *only if present*.
+How code is written and reviewed in this workflow. Every stage reads it: design
+writes against it, **implement** writes to it, **adversarial review** grades by it. It is language- and project-agnostic;
+codebase specifics (verify commands, suites to avoid, prompt or framework
+conventions) live in the `project-context.md` sidecar, loaded *only if present*.
 
 Two framings sit above every rule below:
 
@@ -31,8 +27,7 @@ Two framings sit above every rule below:
   is fair game to tidy.
 - **Declarative over imperative.** Comprehensions, map/filter semantics,
   pipeline-style transforms over manual accumulation loops. Express *what*, not
-  step-by-step *how*. The greppable tells, because this one gets violated with
-  the rule in context: a `continue` in a loop that only assembles a collection
+  step-by-step *how*. The greppable tells: a `continue` in a loop that only assembles a collection
   (that's a comprehension's `if`, written long); an accumulator mutated inside
   the loop that reads it, which is how a variable acquires a second meaning; and
   `while True` with a mid-loop `return` where a recursive step or a bounded
@@ -42,13 +37,12 @@ Two framings sit above every rule below:
   post-processing take arguments and return values — no hidden I/O, no clock or
   environment reads inside. This makes them mock-free to test.
 - **No output arguments; don't mutate then return.** A function returns a value
-  *or* mutates state, never both (Command-Query Separation). Build a new value
-  and return it rather than mutating a passed-in collection.
+  *or* mutates state, never both (Command-Query Separation). Build a new value and
+  return it rather than mutating a passed-in collection.
 - **Avoid mutating variables where a return-and-assign reads cleaner.** Favour
   immutability and rebinding over in-place mutation.
-- **Good abstractions and design patterns — when they earn their place.** Use a
-  pattern to make code genuinely extensible or to remove real duplication.
-  Never a pattern for its own sake (see avoids).
+- **Design patterns only when they earn their place** — genuine extensibility or
+  real duplication removed, never for their own sake.
 - **Domain modelling over primitives.** Model the domain with real types.
   Prefer a domain object over a bare list / dict / map wherever the thing has
   identity or behaviour. Enums or literal-typed values for closed sets, never a
@@ -69,9 +63,8 @@ Two framings sit above every rule below:
   threading a null through every caller.
 - **No duplication.** Consolidate the second occurrence; don't copy-paste "to
   be safe."
-- **Zero warnings.** No lint or type warnings left in. Well-formatted,
-  formatter-clean code. A clean commit means the quality gates passed — never
-  bypass them.
+- **Zero warnings.** No lint or type warnings left in; formatter-clean.
+  Never bypass the quality gates.
 
 ## Dogmatic avoids
 
@@ -112,10 +105,9 @@ Two framings sit above every rule below:
   "verify."** The exact verify command, and which suites are slow/costly
   (e.g. anything making real network or model calls) or known-broken, live in
   `project-context.md`.
-- **Respect the pre-commit gates.** If the project runs formatter + type-check
-  + unit tests on commit, a clean commit already means they passed — don't
-  re-run them as a separate manual step, and never bypass with a no-verify
-  flag.
+- **Respect the pre-commit gates.** If they run formatter + type-check + unit
+  tests, a clean commit already means they passed — don't re-run them manually,
+  and never bypass with a no-verify flag.
 
 ## Collaboration style (how this workflow behaves toward the owner)
 
@@ -127,7 +119,7 @@ Two framings sit above every rule below:
   with tradeoffs only when the call is genuinely theirs to make.
 - **Review docs stay short and scannable** — bulleted "what's good," a ranked
   "what must not be missed" (one paragraph each), a "skip for now" section, and
-  a one-line self-critique per recommendation. Long essays get skipped.
+  a one-line self-critique per recommendation.
 - **Scratch docs are theirs.** Story-scoped plans, flow walkthroughs, drafts —
   don't commit them, don't cite them in commit messages. Permanent docs / ADRs
   are fine.

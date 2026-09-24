@@ -1,46 +1,30 @@
 ---
 name: design-challenge
-description: Hold the design note against a second design built independently from the acceptance criteria alone, before any code is written. One fable agent designs blind at the base commit, one opus agent compares the two, and the divergences are decided and recorded. Runs on cross-repo, structural and production-risk changes; skipped with a reason on everything else.
+description: Before any code, compare the design note against a design built blind from the acceptance criteria, and decide each divergence.
 argument-hint: [Jira key or brief, if the session does not already hold it]
 allowed-tools: Bash, Read, Write, Glob, Grep, Agent, mcp__claude_ai_Slack__slack_send_message, mcp__claude_ai_Atlassian__getJiraIssue, mcp__claude_ai_Atlassian__searchJiraIssuesUsingJql, mcp__claude_ai_Atlassian__getJiraIssueRemoteIssueLinks, mcp__claude_ai_Atlassian__getConfluencePage, mcp__claude_ai_Atlassian__searchConfluenceUsingCql
 ---
 
 # Design challenge
 
-**Owner:** ${user_config.owner_name}. This run acts for them, and wherever this skill
-or a reference says "the owner", it means them. Slack DMs and pings go to Slack
-member `${user_config.slack_user_id}`; if that is blank, use the Slack target in
-`project-context.md`, and if neither exists, record Slack as unavailable in the
-run's degraded list rather than guessing a recipient.
+**Owner:** ${user_config.owner_name}, the person this run acts for ("the owner" here
+and in the references). Slack goes to member `${user_config.slack_user_id}`, else the
+sidecar's Slack target, else record Slack as unavailable in the degraded list.
 
-Every other pass in this workflow inspects code that exists and asks whether it
-is correct, well shaped and readable. None of them can see a wrong root
-decision, because a wrong root decision does not look like a smell — it looks
-like clean, well-named code implementing the wrong thing, and it is invisible
-without something to compare against. This stage builds that something.
-
-The comparison the design note already makes is not this one. Its Q2 sets a
-fresh design against the existing code and its Q3 names a simpler design that
-was rejected, both written by the pass that had already chosen, after it chose.
-That catches over-building and it is worth keeping. What it cannot catch is the
-approach itself, because the approach came from the plan and the plan is not one
-of the two things being compared. Here both designs are produced independently,
-neither knows the other exists, and only then are they held together.
-
-**It runs before the first edit.** Two designs compared cost a paragraph to
-resolve; a design compared against a finished diff costs a rework.
+Every other pass inspects code that exists. None can see a wrong root decision,
+because it looks like clean code implementing the wrong thing. The design note's
+Q2 and Q3 compare alternatives the author chose between, after choosing; they
+catch over-building, not a wrong approach. This stage builds a second design
+independently, from the acceptance criteria alone, and only then holds the two
+together — **before the first edit**, where a divergence costs a paragraph rather
+than a rework.
 
 ## When it runs
 
-**The risk class decides, and the class is in one file.** Read
-`<primary-repo>/.vicaris/risk-<branch>.txt` against
-`${CLAUDE_PLUGIN_ROOT}/references/risk-classes.md`: this stage runs at `elevated`
-and `production`, and is skipped at `mechanical`, `tiny` and `normal`. With no risk
-file, fall back to the triggers below, which are what the class is derived from
-anyway.
-
-Those triggers, for the fallback and for understanding what the class encodes — run
-it when any of these is true of the change:
+Read `<primary-repo>/.vicaris/risk-<branch>.txt` against
+`${CLAUDE_PLUGIN_ROOT}/references/risk-classes.md`: run at `elevated` and
+`production`, skip at `mechanical`, `tiny` and `normal`. Skip a plugin reference only if it is already in your context (the orchestrator's
+Step 0 loads them in its own session; a sub-agent has not seen them). With no risk file, run it when any of these holds:
 
 - it **crosses a repo boundary** — the manifest has more than one entry with work
   planned in each;
@@ -51,26 +35,19 @@ it when any of these is true of the change:
   quantities, or concurrency and shared state**;
 - the plan recorded a fork where two approaches were genuinely close.
 
-Skip it, and say so in one line with the reason, when the change is a bug fix
-with a local root cause, a rename, a typo, a config edit, a behaviour-preserving
-refactor, or an addition that follows an established pattern in the repo with no
-new concept in it. Those changes have no design contest to hold, and running one
-produces an alternative invented for the occasion.
+Skip it, with the reason in one line, for a bug fix with a local root cause, a
+rename, a typo, a config edit, a behaviour-preserving refactor, or an addition
+following an established pattern with no new concept — there is no contest to hold.
 
-**Skip it too when there are no usable acceptance criteria.** The blind design
-is built from the requirement and nothing else, so a thin brief produces a
-sketch that is really a guess, and comparing against a guess is worse than not
-comparing. Say that plainly rather than designing from the plan, which would
-defeat the independence this stage exists for.
+**Skip it too when there are no usable acceptance criteria**, and say so. A blind
+design from a thin brief is a guess, and designing from the plan instead would
+defeat the independence.
 
-**Once per change, never a loop.** The output is a decision, not a round of
-negotiation.
+**Once per change, never a loop.**
 
 ## Step 1 — Assemble the brief, and nothing else
 
-The blind designer gets the requirement and the codebase as it stands before the
-change. It gets no part of your reasoning, and the discipline about what to
-withhold is the entire value of the pass:
+What you withhold is the entire value of the pass:
 
 | Give it | Withhold |
 |---|---|
@@ -79,11 +56,9 @@ withhold is the entire value of the pass:
 | Each repo at its **base commit**, extracted | The branch name and any commit messages |
 | `coding-principles.md` and `project-context.md` | Your assumptions, your rejected alternatives, your framing of the problem |
 
-Resolve the repo set and each base the usual way
-(`${CLAUDE_PLUGIN_ROOT}/references/multi-repo.md`), then extract each repo as it
-stood before the branch. The extract matters: it removes `.git`, so there is no
-branch to read, and it leaves `.vicaris/` behind, so the design notes cannot be
-found by an agent that goes looking:
+Resolve the repo set and bases per `references/multi-repo.md`, then extract each
+repo as it stood before the branch. `git archive` drops `.git` (no branch to read)
+and everything untracked, including `.vicaris/` (no design notes to find):
 
 ```bash
 PRIMARY=$(git rev-parse --show-toplevel)
@@ -101,157 +76,110 @@ for repo in $REPOS; do
 done
 ```
 
-The extract is doing two jobs, and the second is the one to check before launching:
-it gives the agent the code as it stood before the branch, and it strips `.git` and
-everything untracked, which is what puts `.vicaris/` — the plan, the design notes,
-the manifest — out of reach. Confirm neither exists under `$WORK` before you spawn
-anything. An agent that can read the design notes is not a blind designer, and
-nothing downstream will tell you that it read them.
+**Confirm neither `.git` nor `.vicaris/` exists under `$WORK` before you spawn
+anything.** Nothing downstream will tell you the agent read the notes.
 
-Locate the charter, which lives in the `mr-review` plugin:
+Locate the charter in the `mr-review` plugin:
 
 ```bash
 MRR=$(bash "${CLAUDE_PLUGIN_ROOT}/scripts/mr-review-root.sh") || MRR=""
 ```
 
-If that comes back empty the plugin is not installed. Fall back to Step 2b, and
-name the fallback in the output — a challenge that quietly ran without the
-charter is worth less than one that says it did.
+Empty means the plugin is not installed: use Step 2b and name the fallback in the
+output.
 
 ## Step 2 — Design it blind (one **fable** sub-agent, fresh context)
 
-Spawn a single agent with `subagent_type: blind-designer`, the definition this
-plugin ships in `agents/`. Never `fork`: a fork inherits this session's context,
-which is the author's context, and reintroduces exactly the contamination the
-extract was built to remove.
+Spawn one agent with `subagent_type: blind-designer` (shipped in `agents/`).
+**Never `fork`**: a fork inherits the author's context, which is the contamination
+the extract removes. The definition makes the isolation structural — it pins fable
+and grants only Read, Grep and Glob, so the agent cannot run `git` or leave the
+extract. Keep it on a different model from whoever wrote the notes: a second design
+from the same model tends to make the same root choices.
 
-Use the definition rather than an inline prompt, because it is what makes the
-isolation structural. It pins the model to fable and grants **only Read, Grep and
-Glob** — no Bash, so the agent cannot run `git`, cannot reach outside the extract,
-and cannot go looking for the branch, the plan or the design notes even if it
-decides to. Withholding by instruction and withholding by capability look the same
-right up until an agent drifts, and nothing downstream reports that it read what
-you asked it not to.
+Its prompt carries only facts: the acceptance criteria, the extracted paths under
+`$WORK`, and `$MRR/charter/blind_design.md` as the path to follow.
 
-The model is part of the same isolation. The design notes were written on opus, and
-a second design from the same model tends to make the same root choices for the
-same reasons, which turns the comparison into agreement with itself. Fable makes
-different mistakes, and that is what makes it worth comparing against. So keep
-the blind designer on a different model from whoever wrote the notes, even where
-it costs more than the pass it is checking.
-
-Its prompt then carries only facts: the acceptance criteria, the extracted paths
-under `$WORK`, and `$MRR/charter/blind_design.md` as the path to follow.
-
-With no definition available, fall back to `general-purpose` on `model: fable` and
-add the two lines the definition otherwise makes unnecessary:
+With no definition available, use `general-purpose` on `model: fable` and add:
 
 > Work only inside `$WORK`. Do not read the original repositories, do not run
 > `git`, and do not search for a branch, a plan or a design note. Design the
 > change; do not try to reconstruct what someone else built.
 
-> Where the brief leaves something open, record it as an assumption. A stated
-> assumption is information the comparison can use; a silent one is a guess
-> wearing a design's clothes.
+> Where the brief leaves something open, record it as an assumption.
 
-Keep its output as written — the seven-section sketch the charter specifies,
-400–700 words. Do not summarise it before the comparison sees it, and do not
-correct it where you disagree. Your disagreement is one of the two inputs to
-Step 3, not a filter on the other one.
+Keep its output as written — the charter's seven-section sketch, 400–700 words.
+Do not summarise or correct it before Step 3; your disagreement is an input to the
+comparison, not a filter on it.
 
 ### Step 2b — Fallback when the charter is unavailable
 
 Same agent, same isolation, same extract. Tell it: you are a senior engineer on
-this service, you have been handed this story, produce the design you would
-build before writing any code. Seven sections — problem, approach, root
-decisions, concepts introduced, proofs, assumptions, existing design friction.
-Every decision carries a proof: the concrete input, caller or state that makes
-it necessary. Real file paths and real type names, no hedging toward what
-someone else might have chosen.
+this service, handed this story; produce the design you would build before writing
+any code. Seven sections — problem, approach, root decisions, concepts introduced,
+proofs, assumptions, existing design friction. Every decision carries a proof: the
+concrete input, caller or state that makes it necessary. Real file paths and type
+names, no hedging toward what someone else might have chosen.
 
 ## Step 3 — Compare the two (one **opus** sub-agent, fresh context)
 
 Spawn one agent with `model: opus`. It receives both designs as text — the blind
 sketch and every repo's design note — and reads `$MRR/charter/blind_compare.md`,
-with one modification it must be told about:
+told this:
 
 > Skip the charter's "Reconstruct before you read the sketch closely" section.
-> It exists because that pass normally holds a design against finished code and
-> has to render the code as a design first. Here both sides are already designs,
-> so read them in the order given and compare decisions directly.
+> Both sides are already designs, so compare decisions directly.
 
-Everything else in that charter applies unchanged and is what keeps the pass
-honest: differences are classified rather than listed, same decision in
-different words is dismissed silently, a root disagreement is a finding only
-when a concrete consequence can be named, a decision whose proof is missing from
-the sketch cannot be a finding however much the sketch prefers it, and house
-convention is out of scope because neither side was free.
+The rest of the charter applies unchanged. Without the charter, tell it: classify
+differences rather than list them, dismiss wording-only and house-convention
+differences, and count a divergence only with a named consequence and a proof. One adaptation to its evidence rule,
+since nothing is built yet: the author's side may claim a constraint the blind
+designer could not reach only by citing it — a file and line, a migration, a DTO,
+a client call, or a shipped contract in a sibling repo. A constraint asserted from
+the story, a ticket's tech notes or the plan does not count, and one written down
+nowhere is itself the finding.
 
-One adaptation to the charter's evidence rule, since nothing has been built yet.
-The author's side may still claim a constraint the blind designer could not
-reach, but it has to cite it: a file and line, a migration, a DTO, a client call,
-or a shipped contract in a sibling repo. A constraint asserted from the story, a
-ticket's tech notes or the plan does not count, and a constraint that turns out
-to be written down nowhere is itself the finding.
-
-Ask it for, in this order: the material divergences, each with the decision at
-stake, the side it favours, and the concrete consequence of getting it wrong;
-then the differences it dismissed, in one line each, so you can see what it
-considered; then one sentence on whether the two designs agree about the
-**problem**, which is the disagreement that matters most and the one that reads
-as agreement until someone checks.
+Ask it for, in order: the material divergences, each with the decision at stake,
+the side it favours and the concrete consequence of getting it wrong; the
+dismissed differences, one line each; and one sentence on whether the two designs
+agree about the **problem**.
 
 ## Step 4 — Decide, and record the decision
 
-This step is yours and it is not a formality. Every material divergence ends in
-one of two states, and "noted" is not one of them:
+Every material divergence ends in one of two states; "noted" is not one:
 
-- **Adopted** — amend the affected repo's `design-notes-<branch>.md` in place, so
-  what gets built matches what was decided. Where the change invalidates the
-  plan's approach, the design note wins; say so and carry on rather than
-  re-planning. The plan settled the approach on less information than you now
-  have, and that is the ordinary case rather than a failure.
+- **Adopted** — amend the affected repo's `design-notes-<branch>.md` in place.
+  Where this invalidates the plan's approach, the design note wins; say so and
+  carry on rather than re-planning.
 - **Declined** — name the failure case the blind design does not survive: the
-  input, the caller, the state, or the constraint you can cite. "Ours is
-  cleaner" is not a reason, and neither is "the plan already decided this."
+  input, caller, state or citable constraint. "Ours is cleaner" and "the plan
+  already decided this" are not reasons.
 
-If the comparison returns nothing material, that is a real result and worth one
-line. Two independent designs reaching the same shape is the strongest evidence
-this workflow can produce that the shape is right, and it costs less to say than
-to re-derive later.
+Nothing material is a real result; say it in one line.
 
 ## Step 5 — One artifact, one ping
 
-Write `<primary-repo>/.vicaris/design-challenge-<branch>.md` — the primary repo,
-because the challenge is about the change rather than about any one repo's code
-(`references/multi-repo.md`). Scratch, never committed. Keep it short:
+Write `<primary-repo>/.vicaris/design-challenge-<branch>.md` (scratch, never
+committed; `finalize` reads it for the assumptions section). Keep it short:
 
 - **Ran / skipped** — which, and the trigger or the reason.
 - **The blind design** — its approach and root decisions in a few lines, plus
   the path to the full sketch if you kept it.
 - **Divergences** — one short paragraph each: the decision, which design won,
   the consequence named, and adopted or declined with the citation.
-- **Agreement on the problem** — one line, and flag it hard if the two designs
-  were solving different problems, because that is the finding this stage exists
-  to produce.
+- **Agreement on the problem** — one line; flag it hard if the two designs were
+  solving different problems.
 - **Design notes amended** — the repos and what changed in each.
 
-`finalize` reads this file for the completion doc's assumptions section, which is
-the point of writing it down: an assumption backed by a contest between two
-independent designs is evidence, where the same assumption backed by a
-self-critique reads as justification.
-
 Then ping the Slack thread once, per `${CLAUDE_PLUGIN_ROOT}/references/notifications.md`:
-the decision or decisions that shape the change, the alternative that lost, and
-one line on what it would have cost. Skip the ping entirely when the challenge
-was skipped or found nothing — a milestone with no content in it is noise, and
-this is the one stage whose ping is worth reading closely.
+the decisions that shape the change, the alternative that lost, and one line on
+what it would have cost. Skip the ping when the challenge was skipped or found
+nothing.
 
 ## Deciding, not asking
 
-This stage runs unattended like every other. A divergence is resolved here and
-recorded, never handed back as a question, and
-`${CLAUDE_PLUGIN_ROOT}/references/autonomy.md` governs anything not settled above. One case is worth naming because it feels like an escalation and is not:
-when the blind design is clearly better and adopting it means discarding work
-the plan specified, adopt it. Nothing has been built yet, which is exactly why
-this stage runs where it does.
+Divergences are resolved and recorded here, never handed back as questions;
+`references/autonomy.md` governs the rest. When the blind design is clearly better
+and adopting it discards work the plan specified, adopt it — nothing has been
+built yet. On a late challenge (the class rose at the gate), weigh the rework
+against the named consequence instead, and record the call either way.

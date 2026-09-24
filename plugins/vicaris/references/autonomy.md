@@ -1,69 +1,54 @@
 # The autonomy contract
 
-Every stage of this workflow runs unattended, so every stage needs the same answer
-to the same question: what do you do when you would normally ask? This file is that
-answer, in one place, because it used to live in four and two copies had already
-drifted apart — the orchestrator said to apply every review finding while the review
-stage said to park what was not worth fixing, and nothing reconciled them.
-
-Read it once per run. Every skill cites it rather than restating it.
+Every stage runs unattended; this is what to do when you would normally ask.
+Read it once per run.
 
 ## The contract
 
-- **Finish the task autonomously.** Drive all the way to finalize. Do not stop
-  to ask permission between stages.
-- **Never ask a blocking question. Ever.** Do not use `AskUserQuestion` or any
-  interactive prompt, and do not end a turn with a question and no work done.
-  The owner launched this expecting to come back to a finished change, so a prompt
-  waiting for a keypress stalls the entire run for however long they're away. The
-  *only* channel to them is an asynchronous Slack DM that you send and then keep
-  working past.
-- **Every fork is decided, not asked** — including the uncomfortable ones.
-  Think it through, pick the option you'd recommend, log the assumption (and a
-  one-line self-critique), and proceed. The completion doc is where the owner
-  reviews those calls afterwards. "I'd like to confirm first" is not a reason;
-  presenting them a recommended option means you already know the answer, so take
-  it.
-- **Scope is never a question.** The story or brief defines the scope, so
-  "how far should this run go?", "should I do both repos?" and "should I split
-  this?" are all answered the same way: **deliver the whole scope of the story,
-  every repo it touches.** If part of it is genuinely blocked, deliver everything
+- **Finish the task autonomously.** Drive all the way to finalize without
+  stopping to ask permission between stages.
+- **Never ask a blocking question. Ever.** No `AskUserQuestion`, no interactive
+  prompt, no turn that ends in a question with no work done. The *only* channel
+  to the owner is an asynchronous Slack DM you send and keep working past; a
+  prompt waiting for a keypress stalls the whole run for as long as they're away.
+- **Every fork is decided, not asked** — including the uncomfortable ones. Pick
+  the option you'd recommend, log the assumption with a one-line self-critique,
+  and proceed. The owner reviews those calls in the completion doc. "I'd like to
+  confirm first" is not a reason: if you can present a recommended option, you
+  already know the answer, so take it.
+- **Scope is never a question.** "How far should this go?", "both repos?" and
+  "should I split this?" all get the same answer: **deliver the whole scope of the
+  story, every repo it touches.** If part is genuinely blocked, deliver everything
   else in full, ship the MRs for what's done, and record the remainder as
-  follow-on with the reason. Never ask the owner to choose a smaller scope — reducing
-  scope is their call to make *after* seeing what you delivered, not a gate before
-  you start.
+  follow-on with the reason. Never ask the owner to choose a smaller scope;
+  reducing scope is their call *after* seeing what you delivered.
 - **Only genuine external blockers reach the owner, and even then don't hard-stop.**
   The list is closed: expired SSO or a missing credential, a required upstream
   dependency that hasn't shipped, or a genuinely irreversible action (deleting
-  data, publishing something public). Everything else you decide — their
-  uncommitted work is explicitly **not** on this list, because a worktree handles
-  it. Send a terse Slack DM, then continue with everything that isn't blocked and
-  record the blocked item for the summary. Never spin waiting.
+  data, publishing something public). Their uncommitted work is **not** on it,
+  because a worktree handles it. Send a terse Slack DM, continue with everything
+  that isn't blocked, and record the blocked item for the summary. Never spin
+  waiting.
 - **Blocked means blocked on one thing, not on the run.** A blocker in one repo,
-  one AC, or one verification step stops *that* item only. Route around it and
-  keep going; a single obstacle must never become a reason to stop everything and
-  ask.
-- **Push back in the record, not by pausing.** If a requested approach is
-  wrong, implement the defensible version and flag the disagreement (with the
-  alternative) in the completion doc.
-- **Writing the handover is not stopping short.** It is bookkeeping you do at
-  every stage boundary and it never ends the run. *Ending* a session is the rare
-  case, and finishing the stage you are in and then handing over beats pushing one
-  stage further and losing the thread. Neither is a question for the owner.
-- **If the rules seem to leave you no legal move, that's still your call.** Two
-  instructions here can pull against each other — "deliver the whole scope" and
-  "never touch their uncommitted work" being the obvious pair. A contradiction is
-  not permission to stop and ask. Look for the option that honours both (there
-  usually is one, and for that pair it's a worktree); failing that, take the
-  least destructive action that makes progress, record the tension and what you
-  chose in the completion doc, and mention it in the Slack wrap-up so the
-  workflow itself gets fixed. Escalating a rule conflict mid-run costs the owner the
-  whole run; recording it costs them one paragraph.
+  AC or verification step stops *that* item only. Route around it.
+- **Push back in the record, not by pausing.** If a requested approach is wrong,
+  implement the defensible version and flag the disagreement, with the
+  alternative, in the completion doc.
+- **Writing the handover is not stopping short.** It is bookkeeping at every
+  stage boundary. *Ending* a session is rare; finish the current stage first.
+  Neither is a question for the owner.
+- **If the rules seem to leave no legal move, that's still your call.** Two rules
+  pulling against each other is not permission to stop and ask: escalating costs
+  the owner the whole run, recording it costs one paragraph. Look for the option
+  that honours both rules (for "whole scope" vs "never touch their
+  uncommitted work", a worktree); failing that, take the least destructive action that makes progress, record the
+  tension and your choice in the completion doc, and mention it in the Slack
+  wrap-up so the workflow gets fixed.
 
 ## Forks that already have an answer
 
-These come up most runs. None of them is a question; each has a standing
-resolution, so apply it and note it in the completion doc.
+None of these is a question. Apply the resolution and note it in the completion
+doc.
 
 | Situation | What you do |
 |---|---|
@@ -77,13 +62,10 @@ resolution, so apply it and note it in the completion doc.
 | One AC is ambiguous | Implement the reading a careful colleague would pick, state the assumption, and flag it for review |
 | The change looks risky to ship | Put it behind a toggle or keep it backward compatible, and say so — don't seek permission |
 
-If a fork genuinely isn't on this list and isn't on the closed blocker list
-above, that means it's yours to decide. Decide it.
+A fork on neither this list nor the closed blocker list is yours to decide.
 
 ## Deciding inside a stage
 
-A stage that reaches a question it cannot answer from the above has not found an
-escalation, it has found a gap in this file. Decide it the way the contract says —
-the least destructive action that makes progress — and say in the Slack wrap-up
-which question it was, so the row gets added here rather than being re-decided
-differently on the next run.
+A question none of the above answers is a gap in this file, not an escalation.
+Decide it by the contract — the least destructive action that makes progress —
+and name the question in the Slack wrap-up so a row gets added here.
