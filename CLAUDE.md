@@ -16,11 +16,16 @@ two states, and they map onto the product's idle and running states:
 
 | | At rest | Working |
 |---|---|---|
-| Posture | Seated upright, chest narrow, haunches settled | Crouched, rump higher than head, paws spread forward |
+| Posture | Seated three-quarter on, head turned to the viewer, haunch behind, forelegs close under the chest | Identical. The body does not move between states |
 | Ears | Up, slight outward rake | Flattened back and out |
 | Eyes | Open almonds, V pupil relaxed | Narrowed, V pupil tight |
 | Brow | Plain ink | Amber seal (hexagon with a V inside) visible |
-| Tail | Hooked forward in a question-mark curve | Low and trailing, tip lifted |
+| Tail | Swept up behind the haunch in a question-mark curve, nib clear of the body | Identical |
+
+Only the head changes between states, as a real cat signals with ears and
+pupils rather than posture. A crouch was tried and rejected: face-on it is all
+foreshortening, which five flat shapes cannot show, and it made the two states
+look like two different animals.
 
 **The mark** is the Familiar's head alone: two tall outward-raked ears, a
 wedge face, two amber wedges for eyes, no pupils, no curves. Five flat shapes.
@@ -37,11 +42,15 @@ favicon is the same geometry, not a simplification.
 | `vicaris-sigil-mono.svg` | One ink via `currentColor`; eyes cut out with a mask so it inverts with the theme |
 | `vicaris-sigil-16.svg` | Favicon build, identical geometry at 16×16 |
 | `vicaris-familiar-rest.svg`, `-rest-dark.svg` | Mascot at rest; the `-dark` build carries the bone rim |
-| `vicaris-familiar-working.svg`, `-working-dark.svg` | Mascot working, seal on the brow; the head has a keyline in the ground colour to separate it from the haunches |
+| `vicaris-familiar-working.svg`, `-working-dark.svg` | Mascot working: the same body with the working head, seal on the brow |
 
-The mascot files are a flat-geometry pass, not final linework. The seated pose
-and the head are settled; the crouch is the weaker drawing and wants a proper
-three-quarter redraw before it carries a hero image.
+The mascot body is constructed geometry rather than eyeballed linework: one
+continuous chest curve, a haunch that is a true arc, a tail swept along a
+curve with linear taper, three paws from one template on a common baseline.
+Hairlines in the ground colour separate the forelegs, the thigh and the head
+from the body, so they read as dark on bone and vanish into the ink build,
+where the bone rim does the separating. Change the body in one file and mirror
+the change into the other three; the four files share every body path.
 
 **Palette.** One gold only.
 
