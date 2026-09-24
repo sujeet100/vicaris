@@ -7,6 +7,12 @@ allowed-tools: Bash, Read, Write, Glob, Grep, Agent, mcp__claude_ai_Atlassian__g
 
 # Understand
 
+**Owner:** ${user_config.owner_name}. This run acts for them, and wherever this skill
+or a reference says "the owner", it means them. Slack DMs and pings go to Slack
+member `${user_config.slack_user_id}`; if that is blank, use the Slack target in
+`project-context.md`, and if neither exists, record Slack as unavailable in the
+run's degraded list rather than guessing a recipient.
+
 Establish what `$ARGUMENTS` has to be true of, and how much ceremony the rest of
 the run earns. This stage reads and decides; it does not design and it does not
 edit code.

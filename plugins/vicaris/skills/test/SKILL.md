@@ -7,6 +7,12 @@ allowed-tools: Bash, Read, Glob, Grep, mcp__claude_ai_Slack__slack_send_message,
 
 # Test
 
+**Owner:** ${user_config.owner_name}. This run acts for them, and wherever this skill
+or a reference says "the owner", it means them. Slack DMs and pings go to Slack
+member `${user_config.slack_user_id}`; if that is blank, use the Slack target in
+`project-context.md`, and if neither exists, record Slack as unavailable in the
+run's degraded list rather than guessing a recipient.
+
 Verify the change for real. Read `${CLAUDE_PLUGIN_ROOT}/references/project-context.md`
 first — it carries the verify command, the app + login details, SSO handling,
 observability, and the Slack target. If no sidecar is present, do the unit-test
@@ -61,7 +67,7 @@ producer against the new consumer and the result means nothing either way.
 - Start / confirm the local stack per the sidecar.
 - If the stack can't come up because SSO is expired or interactive login is
   needed, **do not attempt an interactive login.** Send a Slack DM (Step 7
-  format, "blocked" variant) asking Sujit to run SSO, then **continue with
+  format, "blocked" variant) asking the owner to run SSO, then **continue with
   everything that doesn't need the stack** (unit results, static checks, code
   review of the UI change) and record the browser step as blocked in the
   summary. Don't spin waiting; the run finalizes with the browser step flagged.
@@ -74,7 +80,7 @@ is intentional.
 
 - **Primary:** navigate to the login page, enter the username, focus the
   password field, and accept Chrome's saved-password autofill, then submit.
-- **Fallback (only with Sujit's prior sign-off):** the keychain→keystroke
+- **Fallback (only with the owner's prior sign-off):** the keychain→keystroke
   helper at `${CLAUDE_PLUGIN_ROOT}/scripts/browser-login-helper.sh` (configured
   via the env vars in the sidecar), which injects the password into the focused
   field without printing it.
@@ -91,18 +97,18 @@ Inspect service logs and the tracing platform (per the sidecar) for the
 requests you just made. Confirm the behaviour end-to-end, not just the UI
 surface. If something looks wrong, capture the trace / log evidence.
 
-## Step 7 — Slack summary (DM to Sujit)
+## Step 7 — Slack summary (DM to the owner)
 
 Post to the Slack target in the sidecar (default: self-DM) via
 `mcp__claude_ai_Slack__slack_send_message`, threaded under the run's parent
 message per `references/notifications.md`. Two variants:
 
-- **Blocked:** one terse line — what's blocked and that it needs SSO / his
+- **Blocked:** one terse line — what's blocked and that it needs SSO / their
   input.
 - **Results:** what was tested, what worked, what didn't, and any trace/log
   evidence for failures. For a multi-repo change, list the unit result **per
   repo** plus the integrated end-to-end result, so a green line can't be mistaken
-  for whole-change coverage. Draft this in Sujit's voice (see the `my-voice`
+  for whole-change coverage. Draft this in the owner's voice (see the `my-voice`
   skill); keep it scannable.
 
 ## Step 8 — Fix and re-test

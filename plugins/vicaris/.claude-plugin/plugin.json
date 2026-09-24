@@ -1,8 +1,21 @@
 {
   "name": "vicaris",
   "description": "End-to-end dev workflow grounded in Sujit's coding principles: understand + risk class (opus) -> design note + blind design challenge (fable blind, opus compare) -> build (sonnet through normal, opus above, auto) -> deterministic gate -> adversarial review (mr-review's review-changes per repo + a whole-change PO pass, opus) -> browser test -> handover -> finalize + MR review",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "author": {
     "name": "Sujit Kamthe"
+  },
+  "userConfig": {
+    "owner_name": {
+      "type": "string",
+      "title": "Your name",
+      "required": true,
+      "description": "The person Vicaris acts for: who it reports to, whose uncommitted work it protects, and whose voice it drafts in."
+    },
+    "slack_user_id": {
+      "type": "string",
+      "title": "Your Slack member ID",
+      "description": "Where run updates and blocker DMs go (Slack profile, then the three-dot menu, then Copy member ID). Leave blank to use the Slack target in project-context.md."
+    }
   }
 }

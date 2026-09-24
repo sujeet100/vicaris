@@ -27,7 +27,7 @@ rather than staying buried in the thread.
 ## The milestones
 
 Ping at **every** milestone below. The point is not the content of any single
-message, it's the drumbeat: Sujit should be able to tell from his phone that real
+message, it's the drumbeat: the owner should be able to tell from their phone that real
 progress is happening, and notice when it stops.
 
 | Milestone | Content |
@@ -38,7 +38,7 @@ progress is happening, and notice when it stops.
 | **Implementation done, per repo** | One reply *per repo as it finishes* (`service-api (1/2) done — filter aggregation, 41 tests green`), not one summary at the end. On a multi-repo change this is the main proof of forward motion |
 | **Review started** | That the three reviewers are running, and over which repos |
 | **Review findings** | Counts by severity, plus the headline of anything non-trivial |
-| **Review comments resolved** | What was fixed and that verify is green again. If a loop hits its two-pass cap, say so with what is outstanding — a capped loop is a decision Sujit should see while it is being made, not read about in the completion doc |
+| **Review comments resolved** | What was fixed and that verify is green again. If a loop hits its two-pass cap, say so with what is outstanding — a capped loop is a decision the owner should see while it is being made, not read about in the completion doc |
 | **Testing started** | Units first, then whether the browser pass is happening or is being skipped (and why) |
 | **Testing done** | What was tested, what worked, what didn't, evidence for failures |
 | **MR raised, per repo** | The MR link as each one goes up, rather than all of them at the end |
@@ -60,6 +60,6 @@ for a while (a big implement, a slow eval), say so when it starts.
   query params.
 - **Walls of text.** No diffs, no full findings lists, no stack traces. Link or
   cite the path instead.
-- **AI-writing tells.** Draft anything Sujit reads in his own voice (the
+- **AI-writing tells.** Draft anything the owner reads in their own voice (the
   `my-voice` skill in the `byline` plugin, if installed). Status pings stay
   clipped and factual; that's fine and expected.

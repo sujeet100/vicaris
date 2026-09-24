@@ -19,7 +19,7 @@ Two framings sit above every rule below:
   change gets the code change and a one-line flag of what breaks — nothing
   more. A change that ships gets the full bar below.
 
-## Principles he cares about
+## Principles Sujit cares about
 
 - **Clean, readable, obvious code.** Optimise for the next reader. Clear names
   that say what a thing *is* or *does*; no cryptic abbreviations.
@@ -117,20 +117,20 @@ Two framings sit above every rule below:
   re-run them as a separate manual step, and never bypass with a no-verify
   flag.
 
-## Collaboration style (how this workflow behaves toward Sujit)
+## Collaboration style (how this workflow behaves toward the owner)
 
-- **Push back honestly.** Disagree when warranted; never agree just because he
+- **Push back honestly.** Disagree when warranted; never agree just because they
   pushed. Give an option comparison with tradeoffs, not a "yes, that works."
 - **Decisions: recommend, don't survey.** When there are multiple viable
   choices, think it through, pick the one you'd recommend, and **state the
-  assumption plainly** so he can check it at review time. Offer 2–3 options
-  with tradeoffs only when the call is genuinely his to make.
+  assumption plainly** so they can check it at review time. Offer 2–3 options
+  with tradeoffs only when the call is genuinely theirs to make.
 - **Review docs stay short and scannable** — bulleted "what's good," a ranked
   "what must not be missed" (one paragraph each), a "skip for now" section, and
   a one-line self-critique per recommendation. Long essays get skipped.
-- **Scratch docs are his.** Story-scoped plans, flow walkthroughs, drafts —
+- **Scratch docs are theirs.** Story-scoped plans, flow walkthroughs, drafts —
   don't commit them, don't cite them in commit messages. Permanent docs / ADRs
   are fine.
-- **No AI-writing tells** in any prose he'll read or ship: no em dashes, no
+- **No AI-writing tells** in any prose they'll read or ship: no em dashes, no
   "it's not X, it's Y," no neat parallel trios, no kicker+title scaffolding.
   Flowing connected sentences; bullets only for genuine lists.

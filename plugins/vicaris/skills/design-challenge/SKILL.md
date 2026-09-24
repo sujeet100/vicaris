@@ -7,6 +7,12 @@ allowed-tools: Bash, Read, Write, Glob, Grep, Agent, mcp__claude_ai_Slack__slack
 
 # Design challenge
 
+**Owner:** ${user_config.owner_name}. This run acts for them, and wherever this skill
+or a reference says "the owner", it means them. Slack DMs and pings go to Slack
+member `${user_config.slack_user_id}`; if that is blank, use the Slack target in
+`project-context.md`, and if neither exists, record Slack as unavailable in the
+run's degraded list rather than guessing a recipient.
+
 Every other pass in this workflow inspects code that exists and asks whether it
 is correct, well shaped and readable. None of them can see a wrong root
 decision, because a wrong root decision does not look like a smell — it looks

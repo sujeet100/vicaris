@@ -51,7 +51,7 @@ does not contain, and the notes go stale invisibly once the branch moves on.
 
 The split is not a convention to memorise, it follows from one question: is this
 doc about one repo's code, or about the change as a whole? A handover describing
-where five repos stand cannot live in any one of them, and a completion doc Sujit
+where five repos stand cannot live in any one of them, and a completion doc the owner
 reads in one place would be worse as five. Everything about a single repo's code
 goes with that code.
 
@@ -106,7 +106,7 @@ git -C "$repo" status --porcelain     # must be empty
   is what makes the MR set recognisable as a single change, and it is what lets
   every stage recompute the manifest path and the diff without being told.
 - **Uncommitted work in any repo is untouchable** — never stash, reset, commit,
-  move, or pull over it, and never ask Sujit to clear it. Work in a **separate
+  move, or pull over it, and never ask the owner to clear it. Work in a **separate
   worktree** instead (below). It is not a blocker, and never a reason to ask what
   the scope should be.
 - A repo that turns out not to need changes after all stays in the set with a
@@ -115,10 +115,10 @@ git -C "$repo" status --porcelain     # must be empty
 ## A dirty repo is not a blocked repo — use a worktree
 
 This is the most common obstacle in this workspace and it has a standing answer,
-so **never ask about it**. Sujit routinely has work in progress in a repo your
+so **never ask about it**. The owner routinely has work in progress in a repo your
 task also needs. A `git worktree` gives you a pristine checkout in a different
-directory while his working tree, staged index and untracked files stay exactly as
-he left them:
+directory while their working tree, staged index and untracked files stay exactly as
+they left them:
 
 ```bash
 git -C "$repo" fetch --prune origin
@@ -127,8 +127,8 @@ git -C "$repo" worktree add -b "$BRANCH" "../$(basename "$repo")-$BRANCH" "$BASE
 
 Work there for the whole task — implement, verify, commit, push, MR — and use that
 path in the manifest in place of the original, so every later stage follows you
-there. Nothing is stashed, nothing is committed on his behalf, nothing waits on
-him, and the full story scope still gets delivered. Note the worktree path in the
+there. Nothing is stashed, nothing is committed on their behalf, nothing waits on
+them, and the full story scope still gets delivered. Note the worktree path in the
 completion doc, and remove it at finalize once the MR is up
 (`git -C "$repo" worktree remove <path>`) or leave it and say so if the branch
 still needs work.

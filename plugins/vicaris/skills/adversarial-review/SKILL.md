@@ -7,6 +7,12 @@ allowed-tools: Bash, Read, Write, Glob, Grep, Agent, Skill, mcp__claude_ai_Slack
 
 # Adversarial review
 
+**Owner:** ${user_config.owner_name}. This run acts for them, and wherever this skill
+or a reference says "the owner", it means them. Slack DMs and pings go to Slack
+member `${user_config.slack_user_id}`; if that is blank, use the Slack target in
+`project-context.md`, and if neither exists, record Slack as unavailable in the
+run's degraded list rather than guessing a recipient.
+
 Review the change the way a careful team would before anyone else has to look at it. The depth
 comes from the `mr-review` plugin's `review-changes` skill, which grades against the same charter
 the MR bot uses and splits the work so each reviewer answers one question — craft (is the
@@ -15,7 +21,7 @@ system). What this skill owns is everything that is true of *the change* rather 
 repository: the repo set, the acceptance criteria, the seam between repos, and the single ranked
 list that comes out.
 
-Reviewers run on **opus** at high effort, and nothing here asks Sujit anything — see "Deciding,
+Reviewers run on **opus** at high effort, and nothing here asks the owner anything — see "Deciding,
 not asking" at the end.
 
 ## Step 1 — Establish the change, not the repo
@@ -72,7 +78,7 @@ above is doing the same job one level up. `--architect` and `--integration` *for
 without disabling the mechanism, which is what the top two rows want.
 
 **Every flag is explicit, always.** Invoked bare, `review-changes` asks which passes to run and
-how deep, and an unattended run that reaches that question stalls until Sujit comes back. The
+how deep, and an unattended run that reaches that question stalls until the owner comes back. The
 flags are what make it decide instead. `--yes` says nobody is watching.
 
 **`--also-repo` is what makes a split change reviewable.** The mapper greps callers and tests
@@ -211,7 +217,7 @@ at all, and what the merge order has to be. State both, in one line each.
 ## Step 5 — Synthesise (short, ranked, scannable)
 
 Merge everything, de-duplicate overlaps, and resolve contradictions, saying which reviewer you
-sided with and why. Write the review doc in Sujit's preferred shape — scratch, don't commit it:
+sided with and why. Write the review doc in the owner's preferred shape — scratch, don't commit it:
 
 - **Repos reviewed** — each repo with its diffstat and which passes ran on it, so it is obvious
   nothing was skipped (one line; omit for a single-repo change).
@@ -265,7 +271,7 @@ wants a human eye.
 ## Deciding, not asking
 
 The contract and the standing resolutions live in
-`${CLAUDE_PLUGIN_ROOT}/references/autonomy.md`; nothing here asks Sujit anything. These rows are
+`${CLAUDE_PLUGIN_ROOT}/references/autonomy.md`; nothing here asks the owner anything. These rows are
 the ones specific to reviewing, and they are not in that file because they are about this stage's
 tools rather than about the change:
 
@@ -276,6 +282,6 @@ tools rather than about the change:
 | The branch has no Jira key | Take the brief from `$ARGUMENTS`; with neither, skip Step 3 and say so |
 | The story has no usable acceptance criteria | Skip the PO pass with the reason, rather than grading against a guess |
 | The `mr-review` plugin is missing | Step 2b, and name the fallback in the report |
-| Two reviewers contradict each other | Pick one, say which and why; do not report both and let Sujit arbitrate |
+| Two reviewers contradict each other | Pick one, say which and why; do not report both and let the owner arbitrate |
 | A finding is real but not worth fixing now | Park it under "Skip for now" — that is what the section is for |
 | The review is enormous | Rank harder and report the ceiling you applied; never quietly truncate |

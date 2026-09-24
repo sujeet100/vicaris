@@ -7,6 +7,12 @@ allowed-tools: Bash, Read, Write, Glob, Grep, mcp__claude_ai_Slack__slack_send_m
 
 # Handover
 
+**Owner:** ${user_config.owner_name}. This run acts for them, and wherever this skill
+or a reference says "the owner", it means them. Slack DMs and pings go to Slack
+member `${user_config.slack_user_id}`; if that is blank, use the Slack target in
+`project-context.md`, and if neither exists, record Slack as unavailable in the
+run's degraded list rather than guessing a recipient.
+
 Capture enough state that a compacted session, or a brand new one, resumes
 seamlessly. Auto-compaction will keep the session alive on its own; what it will
 not keep is the *detail*, since a summariser decides what matters rather than you.

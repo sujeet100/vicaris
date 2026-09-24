@@ -1,11 +1,17 @@
 ---
 name: finalize
-description: Wrap up a completed task — generate the completion document (summary of changes, assumptions with alternatives and reasons, testing notes), run the standalone MR reviewer, and post a Slack summary to Sujit.
+description: Wrap up a completed task — generate the completion document (summary of changes, assumptions with alternatives and reasons, testing notes), run the standalone MR reviewer, and post a Slack summary to the owner.
 argument-hint: [optional MR URL or project/iid for the MR review]
 allowed-tools: Bash, Read, Write, Glob, Grep, Skill, mcp__claude_ai_Slack__slack_send_message, mcp__claude_ai_Atlassian__getJiraIssue, mcp__claude_ai_Atlassian__searchJiraIssuesUsingJql, mcp__claude_ai_Atlassian__getJiraIssueRemoteIssueLinks, mcp__claude_ai_Atlassian__getConfluencePage, mcp__claude_ai_Atlassian__searchConfluenceUsingCql, mcp__claude_ai_Atlassian__getPagesInConfluenceSpace, mcp__claude_ai_Atlassian__getConfluencePageDescendants, mcp__claude_ai_Atlassian__getConfluenceSpaces, mcp__claude_ai_Atlassian__addCommentToJiraIssue, mcp__claude_ai_Atlassian__createConfluencePage, mcp__claude_ai_Atlassian__updateConfluencePage
 ---
 
 # Finalize
+
+**Owner:** ${user_config.owner_name}. This run acts for them, and wherever this skill
+or a reference says "the owner", it means them. Slack DMs and pings go to Slack
+member `${user_config.slack_user_id}`; if that is blank, use the Slack target in
+`project-context.md`, and if neither exists, record Slack as unavailable in the
+run's degraded list rather than guessing a recipient.
 
 Close out the task. Read `${CLAUDE_PLUGIN_ROOT}/references/project-context.md`
 for the MR-reviewer command and the Slack target, and
@@ -18,7 +24,7 @@ as the whole set.
 
 Write **one** completion doc covering the whole change, in the primary repo —
 `<primary-repo>/.vicaris/completion-<branch>.md` (scratch; don't commit unless
-Sujit asks). One doc, not one per repo: the change is one thing and Sujit reviews
+the owner asks). One doc, not one per repo: the change is one thing and the owner reviews
 it in one place.
 
 **Match its length to the risk class** (`references/risk-classes.md`). A
@@ -37,8 +43,8 @@ Scannable sections:
   order, if the change was designed to be backward compatible).
 - **Assumptions** — every meaningful decision, each with the **alternatives
   considered** and the **reason** the chosen option won. This is the record
-  Sujit reviews the implementation against, so be explicit and honest about
-  tradeoffs and anything he might want to revisit. Build it from two artifacts
+  the owner reviews the implementation against, so be explicit and honest about
+  tradeoffs and anything they might want to revisit. Build it from two artifacts
   rather than reconstructing it here, because reasoning reconstructed at the end
   comes out as justification for what was built.
 
@@ -152,7 +158,7 @@ this second review cheap instead of a repeat of the first.
 
 ## Step 3b — Jira and Confluence, only where the sidecar says so
 
-The completion doc is Sujit's; the ticket and the space belong to the team, so
+The completion doc is the owner's; the ticket and the space belong to the team, so
 this stage writes to them only where `project-context.md` says to and never on its
 own initiative. Where it does:
 
@@ -166,14 +172,14 @@ With nothing in the sidecar, skip both silently. An unattended run that starts
 posting to shared spaces is worse than one that stays quiet, and the Slack wrap-up
 already reaches the person who wanted to know.
 
-## Step 4 — Slack summary (DM to Sujit)
+## Step 4 — Slack summary (DM to the owner)
 
 Post the wrap-up to the Slack target (default self-DM) via
 `mcp__claude_ai_Slack__slack_send_message`: what shipped, the assumptions worth
-his eyes, the testing outcome, and **every MR link with its review result** (plus
+their eyes, the testing outcome, and **every MR link with its review result** (plus
 the merge order, if it matters). Thread it under the run's parent message with
 `reply_broadcast: true` so the outcome surfaces in the DM list instead of staying
-buried in the thread (`references/notifications.md`). Draft it in Sujit's voice
+buried in the thread (`references/notifications.md`). Draft it in the owner's voice
 (see `my-voice`); keep it tight.
 
 ## Step 5 — Stop keep-awake
@@ -185,7 +191,7 @@ PIDFILE="$PRIMARY/.vicaris/caffeinate-$BRANCH.pid"
 [ -f "$PIDFILE" ] && kill "$(cat "$PIDFILE")" 2>/dev/null; rm -f "$PIDFILE"
 ```
 
-Never `pkill -f 'caffeinate -dimsu'`. That pattern also matches a session Sujit
+Never `pkill -f 'caffeinate -dimsu'`. That pattern also matches a session the owner
 launched as `caffeinate -dimsu claude`, and killing it ends the session — so the
 tidy-up step would be the thing that kills the run. With no pidfile, leave it:
 the `-t 21600` cap expires on its own, and a stray keep-awake costs far less than
@@ -193,7 +199,7 @@ a killed session.
 
 ## Step 6 — Point at the doc
 
-Print the completion-doc path and **every** MR link so Sujit has one place to
+Print the completion-doc path and **every** MR link so the owner has one place to
 review everything. Close with the per-repo checklist, generated rather than
 recalled:
 

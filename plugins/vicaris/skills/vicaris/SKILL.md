@@ -7,6 +7,12 @@ allowed-tools: Bash, Read, Write, Edit, Glob, Grep, Agent, Skill, mcp__claude_ai
 
 # Vicaris (orchestrator)
 
+**Owner:** ${user_config.owner_name}. This run acts for them, and wherever this skill
+or a reference says "the owner", it means them. Slack DMs and pings go to Slack
+member `${user_config.slack_user_id}`; if that is blank, use the Slack target in
+`project-context.md`, and if neither exists, record Slack as unavailable in the
+run's degraded list rather than guessing a recipient.
+
 Take `$ARGUMENTS` from intake to a reviewed, tested, finalized change **without
 manual intervention**. The individual stages (`plan`, `implement`,
 `adversarial-review`, `test`, `handover`, `finalize`) also run standalone; this
@@ -27,9 +33,9 @@ drifts from:
   an asynchronous Slack DM you send and keep working past.
 - **Deliver the whole scope of the story, every repo it touches.** If part is
   genuinely blocked, ship everything else in full and record the remainder as
-  follow-on. Reducing scope is Sujit's call after seeing what landed.
-- **Only genuine external blockers reach him, and even then don't hard-stop.** The
-  list is closed and his uncommitted work is not on it, because a worktree handles
+  follow-on. Reducing scope is the owner's call after seeing what landed.
+- **Only genuine external blockers reach them, and even then don't hard-stop.** The
+  list is closed and their uncommitted work is not on it, because a worktree handles
   that.
 
 ## Step 0 — Session setup
@@ -51,7 +57,7 @@ drifts from:
    echo $! > "$PRIMARY/.vicaris/caffeinate-$BRANCH.pid"
    ```
    **Record the PID**, because finalize must kill *this* process and not every
-   `caffeinate` on the machine. If Sujit launched the whole session under
+   `caffeinate` on the machine. If the owner launched the whole session under
    `caffeinate -dimsu claude`, a pattern kill matches that too — and killing it
    takes the session down with it, which is a long unattended run ending three
    minutes before it would have finished.
@@ -64,9 +70,9 @@ drifts from:
      || git remote show origin | sed -n 's|.*HEAD branch: |origin/|p')
    git status --porcelain          # must be empty
    ```
-   - **Dirty tree → work in a worktree.** Uncommitted work is Sujit's: never
-     stash, reset, commit, move, or pull over it, and never ask him to clear it.
-     Instead take a pristine checkout beside it and work there, which leaves his
+   - **Dirty tree → work in a worktree.** Uncommitted work is the owner's: never
+     stash, reset, commit, move, or pull over it, and never ask them to clear it.
+     Instead take a pristine checkout beside it and work there, which leaves their
      tree and index untouched and still delivers the full scope:
      ```bash
      git -C "$repo" worktree add -b "$BRANCH" \
@@ -109,7 +115,11 @@ drifts from:
    line each, and carry every line into the completion doc. A run that could not
    ping, could not read the story, or reviewed without the charter is still a
    useful run; one that did those things silently is not.
-7. **Effort:** run every stage at high reasoning effort, and set it explicitly —
+7. **Pass the owner on.** A sub-agent that reads a skill or reference as a file
+   sees `${user_config.…}` placeholders unfilled, so every sub-agent prompt that
+   can reach Slack or the owner carries the name and Slack member ID from the
+   **Owner** line above as plain text.
+8. **Effort:** run every stage at high reasoning effort, and set it explicitly —
    Opus 5.5 defaults to `medium`, one level below the Opus models this workflow
    was tuned on, so an unset effort quietly thins every design and review pass.
 
@@ -205,7 +215,7 @@ Skip the assumptions block only when the story left nothing open.
 echo "<ts>" > "$PRIMARY/.vicaris/slack-thread-$BRANCH.txt"
 ```
 
-Then ping at each stage boundary per `references/notifications.md`. Sujit is not
+Then ping at each stage boundary per `references/notifications.md`. The owner is not
 watching the terminal, so a stage that finishes silently is indistinguishable from
 a stage that hung. Send and move on; never wait for a reply.
 
@@ -344,7 +354,7 @@ on both sides are exactly what cannot see the seam.
 
 Post the Slack results summary. Fix and re-test what failed, **capped at two
 passes** like every other loop, with the outcomes in the ledger. If blocked on
-SSO, Slack Sujit and continue with the rest. Refresh the handover doc when the
+SSO, Slack the owner and continue with the rest. Refresh the handover doc when the
 stage closes and before the second fix pass — a long verification loop is where
 runs overrun, and its reasoning is the first thing a compaction flattens.
 
@@ -420,7 +430,7 @@ and in the terminal that you are handing over, and give the resume command.
 
 - Keep a running list of decisions + assumptions as you go; it becomes the
   completion doc's assumptions section.
-- Scratch docs (plan, review, handover) are Sujit's working material — don't
+- Scratch docs (plan, review, handover) are the owner's working material — don't
   commit them, don't cite them in commit messages. They live in the primary repo.
 - Re-confirm the repo before any git op (`git -C "$repo"` beats `cd`), and tag
   every file, finding and result with its repo name — bare `file:line` is

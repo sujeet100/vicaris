@@ -119,8 +119,12 @@ claude plugin marketplace add <path-to-this-repo>
 claude plugin install vicaris@sujit-marketplace
 ```
 
-Vicaris is generic; everything specific to the project you point it at lives in
-one sidecar. Copy `references/project-context.template.md` to
+When you enable the plugin, Claude Code asks for your name and your Slack member
+ID. They are kept in your own user settings rather than in this repo, and every
+stage uses them for who it reports to and where it sends updates; change them
+later with `/config`.
+
+Everything specific to the project you point it at lives in one sidecar. Copy `references/project-context.template.md` to
 `references/project-context.md` and fill in the verify command, how to run and log
 into the app, observability, the MR reviewer and the Slack target. That file is
 gitignored so project detail never lands in this repo, and every stage runs
@@ -148,22 +152,9 @@ Every stage is also a standalone skill, so you can run one on its own.
 | **Scripts** | `vicaris-risk.sh` (observed class, raise-only) · `vicaris-gate.sh` (records each repo's verify) · `vicaris-parity.sh` (every instance of a pattern, touched or not) · `vicaris-status.sh` (per-repo coverage) · `mr-review-root.sh` · `browser-login-helper.sh` (keychain login that keeps passwords out of the model's context) |
 | **Hooks** | `SessionStart` re-injects the run's state; `PreCompact` warns when the handover doc is stale |
 
-## Identity
+## The name
 
-Vicaris is **the Familiar**, a compact black feline with amber eyes: the one you
-send out to act in your place. It has two states that match the product's own.
-At rest it sits upright with its tail hooked forward; working, it drops into a
-crouch, ears raked back, with a small amber seal on its brow. The **mark** is the
-head alone, because that is what still reads at sixteen pixels.
-
-| Asset | Use |
-|---|---|
-| `assets/vicaris-sigil.svg` | Primary mark, for light grounds |
-| `assets/vicaris-sigil-dark.svg` | Same mark with a bone rim, for dark grounds |
-| `assets/vicaris-sigil-mono.svg` | Single colour via `currentColor`, inverts with the theme |
-| `assets/vicaris-sigil-16.svg` | Favicon, same geometry on a 16 grid |
-| `assets/vicaris-familiar-rest.svg` / `-rest-dark.svg` | The Familiar at rest |
-| `assets/vicaris-familiar-working.svg` / `-working-dark.svg` | The Familiar working |
-
-Palette: Ink `#15130F`, Ground `#0B0A08`, Bone `#EDE6D6`, Amber `#C9963A`. The
-full identity rules live in the repository's `CLAUDE.md`.
+*Vicarius* is Latin for the one who acts in another's place, which is the whole
+job. The cat in the mark is a familiar, the creature a witch sends out to do her
+errands, and that is the relationship too: you hand it the story, it goes, and it
+comes back with a record of what it did.

@@ -41,7 +41,7 @@ set -uo pipefail   # deliberately not -e: this hook fails open, never breaks a s
 [ "${VICARIS_PRECOMPACT_OFF:-0}" = "1" ] && exit 0
 
 # Is the handover doc older than the branch's newest commit? Compared as timestamps, not
-# via `.git/HEAD`: in a git *worktree* — which is how Vicaris runs whenever Sujit has
+# via `.git/HEAD`: in a git *worktree* — which is how Vicaris runs whenever the owner has
 # uncommitted work — `$repo_root/.git` is a file rather than a directory, so `.git/HEAD`
 # does not exist and a `-ot` test against it silently returns false. That made staleness
 # undetectable in exactly the case it matters.

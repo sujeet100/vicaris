@@ -52,6 +52,8 @@ environment variable and let the shell resolve it at run time.
 
 - The MR review command, if there is a standalone reviewer.
 - The channel MRs are announced in, and the exact message shape expected.
+- A Slack target for run updates, only if it should differ from the Slack member
+  ID in the plugin's settings.
 - The issue-tracker key format, so branch names and MR titles carry it.
 
 ## Prompt and eval conventions

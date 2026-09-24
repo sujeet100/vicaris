@@ -7,6 +7,12 @@ allowed-tools: Bash, Read, Write, Edit, Glob, Grep, Skill, Agent, mcp__claude_ai
 
 # Implement
 
+**Owner:** ${user_config.owner_name}. This run acts for them, and wherever this skill
+or a reference says "the owner", it means them. Slack DMs and pings go to Slack
+member `${user_config.slack_user_id}`; if that is blank, use the Slack target in
+`project-context.md`, and if neither exists, record Slack as unavailable in the
+run's degraded list rather than guessing a recipient.
+
 Build the change described by the plan (`$ARGUMENTS`, or the in-session plan).
 
 **Model / mode:** high reasoning effort, **auto mode** — proceed through the
@@ -172,6 +178,8 @@ build must not re-decide:
 
 - the path to this skill, and the instruction to follow Steps 3–6b in auto mode,
   including the per-repo Slack pings and the gate script in Step 6;
+- the owner's name and Slack member ID as resolved in the **Owner** line above —
+  the agent reads this skill as a file, so its placeholders are not filled in;
 - the manifest path, the branch, and the dependency order;
 - the Step 1 list — applicable rules, exemplars, rule per decision — verbatim;
 - every repo's `design-notes-<branch>.md` path, as amended by the challenge, with
@@ -330,7 +338,7 @@ tests pass — they passed before it started.
 (parent `ts` in `<primary-repo>/.vicaris/slack-thread-<branch>.txt`). One line per
 repo, e.g. `service-api (1/2) done — filter aggregation, 41 tests
 green`. Implementation is the longest silent stretch of a run, so this is where a
-per-repo drumbeat matters most: it's the difference between Sujit seeing progress
+per-repo drumbeat matters most: it's the difference between the owner seeing progress
 and wondering whether the run died. If a single repo's work is going to take a
 while, say so when you start it.
 
