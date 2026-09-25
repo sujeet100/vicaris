@@ -37,7 +37,8 @@ Having the rules in context is not reasoning against them, so before any edit wr
 out, briefly, in the run:
 
 1. **Applicable rules.** The five to ten that bear on this change, named
-   (`§3.9 same input same output`), not "the conventions".
+   by the repo's own id where its conventions number them, otherwise by the
+   principle's title (`Pure functions for business logic`), not "the conventions".
 2. **Exemplars.** One to three places in this repo that already do it well. Grep
    for them.
 3. **Rule per decision.** For each planned change, the rule that shapes it, and

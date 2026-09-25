@@ -123,7 +123,7 @@ work) across **every** repo.
 
 - **Clean-code reviewer** — grade against `coding-principles.md` *and the repo's own convention
   docs* (whatever `project-context.md` names, or the coding and testing conventions under
-  `docs/`), citing the rule id in each finding (`§3.8 names reveal intent`). Readability, naming,
+  `docs/`), citing the rule in each finding — the repo's own id where its conventions number them, otherwise the principle's title (`Clean, readable, obvious code`). Readability, naming,
   complexity, function and module size, declarative over imperative, pure functions, duplication,
   typing at boundaries, zero warnings. Over-engineering and nits-that-shipped are findings too.
 - **Design reviewer** — SOLID at real seams, DDD and domain modelling, abstraction quality,
