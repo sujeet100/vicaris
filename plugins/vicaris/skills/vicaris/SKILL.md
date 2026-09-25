@@ -124,7 +124,7 @@ Ping at each stage boundary per `notifications.md`.
 
 The `implement` skill runs in three parts, because its middle part fans out:
 
-1. **Design** — one **opus** sub-agent runs its Steps 1–2b and stops before 2c. It
+1. **Design** — one **opus** sub-agent (`model: opus`) runs its Steps 1–2b and stops before 2c. It
    writes the Step 1 rules list and every repo's design note to disk.
 2. **Challenge** — you run Step 2c, the `design-challenge` skill, here: it spawns
    its own two agents, which a sub-agent cannot.

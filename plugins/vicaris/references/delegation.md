@@ -53,8 +53,8 @@ filled in. Give it facts and paths, never content it can read itself:
   per repo, and anything it could not do.
 
 When it returns, check the files it was meant to write, not its report. A stage that
-came back red or with an unexplained departure goes to a fresh fix sub-agent with
-the failure, never to an inline repair in the orchestrator.
+came back red or with an unexplained departure goes to a fresh **opus** fix sub-agent
+with the failure, never to an inline repair in the orchestrator.
 
 ## Waiting is not work
 
@@ -63,4 +63,4 @@ command re-reads the whole context to learn "still running". Wait with one
 background loop instead — `Bash` with `run_in_background: true` running an `until`
 over the status command, or the Monitor tool — and act when it notifies. When
 reading the result needs judgement, such as an eval that moved, hand the job's
-output to a short sub-agent rather than pulling it into the orchestrator.
+output to a short **opus** sub-agent rather than pulling it into the orchestrator.
