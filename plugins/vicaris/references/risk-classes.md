@@ -58,7 +58,10 @@ migration checks, plus a completion doc with a rollback plan.
 
 **Build model.** At `normal` and below the build's shape is already decided on
 opus — in the design note, or in the rules and exemplars named before it — so
-sonnet executes it, at half the price, in the stage that uses the most tokens. At `elevated`
+sonnet executes it. The saving is real but smaller than the list price suggests:
+Sonnet halves cache writes and output, while cache reads, most of a build's tokens,
+cost about the same on Opus 5.5, and Opus can finish in fewer steps. Re-measure it
+on real runs before widening or narrowing the sonnet classes. At `elevated`
 and `production` the contract still firms up while the producer is written, and a
 wrong call crosses a repo boundary before any reviewer sees it, so the build stays
 on opus. Fix passes and `test` follow the build model, since the findings and the

@@ -2,6 +2,7 @@
 name: blind-designer
 description: Designs a change from its acceptance criteria alone, in a pre-change copy of the repo. Used by design-challenge; never give it the plan, design notes, branch or diff.
 model: fable
+effort: high
 tools: Read, Grep, Glob
 ---
 

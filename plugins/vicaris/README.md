@@ -110,11 +110,11 @@ review and finalize. The build runs on **Sonnet** at `mechanical`, `tiny` and
 on Opus at `elevated` and `production`, where the contract is still settling as it
 is written. Fix passes and the test stage follow the build model. **Fable** runs
 only the blind designer, so the independent design comes from a different model
-than the notes it is checking. Run the session at high reasoning effort and set it
-explicitly, since Opus 5.5 defaults to `medium`.
+than the notes it is checking. Run the session at medium effort: each stage's
+effort comes from its agent definition, high wherever a stage decides or builds.
 
-The orchestrator only sequences, decides and fans out. Every stage that reads,
-edits, runs or drives code is one sub-agent, because on real runs the main
+The orchestrator only sequences and checks. Every stage is one sub-agent — `lead`
+where it judges, `builder` where it executes — because on real runs the main
 session's re-read context, not the sub-agents, was most of the spend. That keeps
 the orchestrator small enough to run with auto-compaction at 200k.
 
@@ -154,7 +154,7 @@ Every stage is also a standalone skill, so you can run one on its own.
 |---|---|
 | **Skills** | `/vicaris` (the orchestrator), `/understand`, `/implement`, `/design-challenge`, `/adversarial-review`, `/test`, `/handover`, `/finalize` |
 | **References** | `autonomy` (the contract and standing resolutions) · `risk-classes` (what each class buys) · `gates` (what must be green, the two-pass cap) · `coding-principles` (the standard) · `delegation` (what runs in a sub-agent, on which model) · `design-note` (the eight questions asked before the first edit) · `multi-repo` (the manifest and per-repo invariants) · `notifications` (the Slack drumbeat) · `project-context.template` |
-| **Agents** | `blind-designer` (Fable, read-only, no shell, so it cannot see the branch) · `acceptance-criteria` (Sonnet, read-only) |
+| **Agents** | `lead` (Opus, high effort: understand, design and its challenge, review, finalize) · `builder` (the class's build model, high effort: build, fix passes, test) · `blind-designer` (Fable, read-only, no shell, so it cannot see the branch) · `acceptance-criteria` (Sonnet, read-only) |
 | **Scripts** | `vicaris-risk.sh` (observed class, raise-only) · `vicaris-gate.sh` (records each repo's verify) · `vicaris-parity.sh` (every instance of a pattern, touched or not) · `vicaris-status.sh` (per-repo coverage) · `mr-review-root.sh` · `browser-login-helper.sh` (keychain login that keeps passwords out of the model's context) |
 | **Hooks** | `SessionStart` re-injects the run's state; `PreCompact` warns when the handover doc is older than the run's latest commit, artifact or edit |
 

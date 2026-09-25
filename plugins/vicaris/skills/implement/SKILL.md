@@ -20,8 +20,8 @@ invalidates it.
 **Steps 1–2c are design and run on opus.** **Steps 3–6b are the build and run on
 the model the risk class names** — sonnet at `mechanical`, `tiny` and `normal`,
 opus at `elevated` and `production` (`${CLAUDE_PLUGIN_ROOT}/references/risk-classes.md`).
-Step 2d is the handoff. In an orchestrated run the design is itself a sub-agent that
-runs Steps 1–2b and stops, and the orchestrator runs 2c and 2d
+Step 2d is the handoff. In an orchestrated run the design is a `lead` sub-agent that
+runs Steps 1–2c and stops, and the orchestrator runs 2d
 (`${CLAUDE_PLUGIN_ROOT}/references/delegation.md`). Run standalone on another model,
 do Steps 1–2c on an opus sub-agent or switch to opus first.
 
@@ -88,9 +88,6 @@ flattens. Placement and the local `.vicaris/` exclude are in
 
 ## Step 2c — Challenge the design, before the first edit
 
-**Running as the design sub-agent, stop here** and report the note paths; the
-orchestrator runs this step and the next, since both spawn agents.
-
 Your note's comparisons were made by the pass that already chose, so they catch
 over-building but not a wrong approach. Run the `design-challenge` skill: it builds
 a second design from the acceptance criteria alone and compares the two, and it
@@ -99,15 +96,16 @@ authorisation, money or concurrency run it; a local fix or pattern-following
 addition skips with a reason).
 
 It amends the design notes in place where a divergence is adopted, so **re-read
-them after it returns**. A declined divergence keeps its reason in the note, which
+them after it returns**. Running as the design sub-agent, stop after this step and
+report the note paths; the orchestrator spawns the build. A declined divergence keeps its reason in the note, which
 review weighs if a reviewer proposes the same thing.
 
 ## Step 2d — Hand the build to the build model
 
 Read the class from `<primary-repo>/.vicaris/risk-<branch>.txt` and spawn **one**
-sub-agent with `subagent_type: general-purpose` to run Steps 3–6b across the whole
+sub-agent with `subagent_type: builder` to run Steps 3–6b across the whole
 manifest: `model: sonnet` at `mechanical`, `tiny` and `normal`, `model: opus` at
-`elevated` and `production`. Do not build inline at any class — every build turn in
+`elevated` and `production`; the definition holds its effort at high. Do not build inline at any class — every build turn in
 this context re-reads all of it. Never `fork`: a fork always runs on the parent's
 model.
 
@@ -128,7 +126,7 @@ every stage sub-agent, plus everything the build must not re-decide:
 When it returns, read each repo's `verify-<branch>.txt` rather than trusting the
 summary, and re-read the design notes for amendments. A build that came back red or
 with an unexplained departure from its note is not handed to review: spawn a fresh
-**opus** fix sub-agent with the failure and the note, rather than repairing it here.
+`builder` on **opus** with the failure and the note, rather than repairing it here.
 
 ## Step 3 — Build it, one slice at a time
 

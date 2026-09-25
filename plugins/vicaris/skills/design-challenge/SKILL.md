@@ -123,7 +123,7 @@ names, no hedging toward what someone else might have chosen.
 
 ## Step 3 — Compare the two (one **opus** sub-agent, fresh context)
 
-Spawn one agent with `model: opus`. It receives both designs as text — the blind
+Spawn one `lead` (`subagent_type: lead`, opus at high effort). It receives both designs as text — the blind
 sketch and every repo's design note — and reads `$MRR/charter/blind_compare.md`,
 told this:
 

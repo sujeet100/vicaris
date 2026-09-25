@@ -61,17 +61,18 @@ write step from context, invoking it again if a compaction dropped its field lis
 7. **Pass the owner on.** Sub-agents reading a skill as a file see `${user_config.…}`
    unfilled, so every sub-agent prompt that can reach Slack or the owner carries
    the name and Slack member ID as plain text.
-8. **Effort:** high on every stage, set explicitly (Opus 5.5 defaults to `medium`).
+8. **Effort:** run this session at medium. Each stage's effort comes from its agent
+   definition (`delegation.md`), high wherever a stage decides or builds.
 
-**Delegation.** `delegation.md` decides what runs here and what runs in a sub-agent,
-on which model, and what each sub-agent's prompt carries. Its short form: you
-sequence, decide and fan out; every stage that reads, edits, runs or drives code is
-one sub-agent. Fable is the blind designer only, so it differs from the model that
-wrote the notes.
+**Delegation.** `delegation.md` decides which shipped agent runs each stage, on which
+model and effort, and what each prompt carries. Its short form: you sequence and
+check; every stage is one sub-agent — `lead` where it judges, `builder` where it
+executes. Fable is the blind designer only, so it differs from the model that wrote
+the notes.
 
-## Step 1 — Understand (opus sub-agent)
+## Step 1 — Understand
 
-Spawn an **opus** sub-agent (`model: opus`) running the `understand` skill on
+Spawn `lead` (`subagent_type: lead`) running the `understand` skill on
 `$ARGUMENTS`, so the story and linked pages stay out of this long-lived context. It
 writes `<primary>/.vicaris/understanding-<branch>.md` and
 `<primary>/.vicaris/risk-<branch>.txt`.
@@ -122,14 +123,13 @@ Ping at each stage boundary per `notifications.md`.
 
 ## Step 2 — Implement
 
-The `implement` skill runs in three parts, because its middle part fans out:
+The `implement` skill runs in two sub-agents:
 
-1. **Design** — one **opus** sub-agent (`model: opus`) runs its Steps 1–2b and stops before 2c. It
-   writes the Step 1 rules list and every repo's design note to disk.
-2. **Challenge** — you run Step 2c, the `design-challenge` skill, here: it spawns
-   its own two agents, which a sub-agent cannot.
-3. **Build** — you spawn the one build sub-agent per its Step 2d, on the class's
-   build model, and check its verify files and note amendments before the gate.
+1. **Design** — `lead` runs its Steps 1–2c: the Step 1 rules and every repo's design
+   note to disk, then the `design-challenge` skill, which spawns its own two agents
+   and amends the notes where a divergence is adopted.
+2. **Build** — you spawn `builder` per its Step 2d, with the class's build model as
+   `model:`, and check its verify files and note amendments before the gate.
 
 Then refresh the handover doc.
 
@@ -163,27 +163,26 @@ A gate failure is not a blocker: fix, re-run, continue.
 
 ## Step 3 — Adversarial review
 
-Run the `adversarial-review` skill. You decide the findings; each fix pass is one
-sub-agent on the class's build model (`delegation.md`). The fix loop caps at two
-passes, both recorded in `<primary>/.vicaris/fix-ledger-<branch>.md`
-(`gates.md`). At the cap, carry what is outstanding into the completion doc and
-every affected MR description, ping the thread, and move on. Refresh the handover
-doc before the second fix pass.
+Spawn `lead` to run the `adversarial-review` skill. It decides the findings and runs
+each fix pass as a `builder` on the class's build model (`delegation.md`); you read
+its report and the ledger at `<primary>/.vicaris/fix-ledger-<branch>.md`, not its
+summary. The fix loop caps at two passes (`gates.md`); at the cap it carries what is
+outstanding into the ledger for the completion doc and every affected MR
+description, and moves on. Refresh the handover doc when it returns.
 
 ## Step 4 — Test
 
-Spawn one sub-agent on the class's build model to run the `test` skill, including
-its fix-and-re-test loop, capped at two passes; the browser output never enters
-your context. If it reports SSO blocked, it has already told the owner: continue
-with the rest. Refresh the handover doc when the
-stage closes and before the second fix pass.
+Spawn `builder`, with the class's build model as `model:`, to run the `test` skill,
+including its fix-and-re-test loop, capped at two passes; the browser output never
+enters your context. If it reports SSO blocked, it has already told the owner:
+continue with the rest. Refresh the handover doc when it returns.
 
 ## Step 5 — Finalize
 
-Run the `finalize` skill: completion doc, one MR per repo, MR review on each, Slack
-wrap-up, stop the `caffeinate`. It stays here because its fix loop re-enters review,
-but its waits on pipelines and evals are background loops and its fixes are fix
-sub-agents (`delegation.md`). A finding the local review already parked is answered
+Spawn `lead` to run the `finalize` skill: completion doc, one MR per repo, MR review
+on each, Slack wrap-up, stop the `caffeinate`. Its waits on pipelines and evals are
+background loops, and its fix loop re-enters review from inside it
+(`delegation.md`). A finding the local review already parked is answered
 with its ledger line, not relitigated. The task is not done until this exits zero:
 
 ```bash

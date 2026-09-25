@@ -2,6 +2,7 @@
 name: acceptance-criteria
 description: Read-only check of a change against its story's acceptance criteria across every repo it touches: FULL or PARTIAL scope, each criterion addressed, partial or missing.
 model: sonnet
+effort: high
 tools: Read, Grep, Glob, Bash
 ---
 

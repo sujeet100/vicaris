@@ -107,7 +107,7 @@ add up to a clean review of the whole change.
 Ping the thread with each MR's verdict, and again once its comments are resolved.
 
 Feed blocker/should-fix findings back through implement → review → test, each fix
-pass one sub-agent on the class's build model, applying each finding in its own repo and re-running that repo's verify (through
+pass one `builder` on the class's build model, applying each finding in its own repo and re-running that repo's verify (through
 `scripts/vicaris-gate.sh`) plus the integrated path. Apply and re-review rather
 than stopping; only genuine external blockers pause the run.
 

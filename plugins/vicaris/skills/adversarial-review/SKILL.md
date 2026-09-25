@@ -114,7 +114,7 @@ the `normal` invocation instead.
 
 ### Step 2b — Fallback when `review-changes` is unavailable
 
-Spawn three opus sub-agents in a single message, each getting instructions rather
+Spawn three `lead` sub-agents (opus, high effort) in a single message, each getting instructions rather
 than content: the repo list with paths and resolved `BASE`, the changed-file stat,
 and the paths to `${CLAUDE_PLUGIN_ROOT}/references/coding-principles.md`,
 `references/multi-repo.md` and `project-context.md`. Each pulls its own diffs
@@ -195,7 +195,7 @@ Ping Slack per `${CLAUDE_PLUGIN_ROOT}/references/notifications.md` when the revi
 starts (over which repos) and when it lands (counts by severity plus the headline
 of anything non-trivial, never the full list).
 
-Hand the ranked fix list to a fix pass — **one sub-agent per pass**, on the class's
+Hand the ranked fix list to a fix pass — **one `builder` per pass**, on the class's
 build model, given the decided list and the ledger path
 (`${CLAUDE_PLUGIN_ROOT}/references/delegation.md`) — **applying each finding in the
 repo it names**, re-verifying that repo with `scripts/vicaris-gate.sh`, and re-running the
