@@ -62,49 +62,21 @@ Step 1 named the rules; this names the *shape* — whether a class should exist,
 where a rule lives, what gets deleted — which is expensive to revisit once a diff
 exists.
 
-**If the repo has its own `design-change` skill** (`.claude/skills/design-change/`),
-run it and use its output. Otherwise answer the seven below against the Step 1
-rules.
-
 **Only at `normal` and above** (read `<primary-repo>/.vicaris/risk-<branch>.txt`);
-`mechanical` and `tiny` skip it. One line per answer; `none` plus the reason is an
-answer, a blank is a finding.
+`mechanical` and `tiny` skip it.
+
+**Read `${CLAUDE_PLUGIN_ROOT}/references/design-note.md` and answer it** against
+the Step 1 rules: the eight questions, then the rows the change touches. **If the
+repo has its own `design-change` skill** (`.claude/skills/design-change/`), run it
+instead — it carries that repo's rows and rule citations — and still answer the
+reference's *Crosses a repo boundary* row when the manifest has more than one repo,
+since a repo's own skill cannot see the others.
 
 **Write every repo's note before the first `Edit` or `Write` in any of them**, so
 the contract is chosen rather than inherited from whatever the producer happened to
 do, and so Step 2c can compare a whole design. When the contract's detail moves
 while you write the producer, amend the note — `finalize` quotes these as the
 reasoning behind what shipped.
-
-```
-Design note
-1. Requirement: <one sentence, no class / file / pattern names>
-2. Fresh design: <what you'd build in an empty repo> · Existing: <closest file> · Verdict: <matches | differs — which is right, and whether this change fixes it>
-3. Rejected simpler design: <what it was> · Breaks because: <the specific input, state or caller>
-4. Deleted: <file / function / branch> or none because <reason>
-5. Tested by: <the pure function or contract under test, no mocks> or impure because <the I/O, clock or global it reads>
-6. Nouns → types: <noun: Type | primitive> for each noun in line 1 · Verbs → owners: <verb: OwningType>
-7. Repeated shapes: <file:line, file:line — the unnamed abstraction> or none
-```
-
-Three carry most of the weight. Q2: design in an empty repo first, then read the
-existing code — existing code shows what exists, not what is right. Q3: name the
-input or caller the simpler design fails for, not "less flexible". Q4: a change
-that only adds usually should have modified something.
-
-Then answer only the rows that apply:
-
-| The change… | Answer |
-|---|---|
-| **Adds a class or module** | Its one reason to change, in one sentence. Which object owns the data each new rule reads (the rule goes there). Each invariant and the *single* place that enforces it. |
-| **Adds a parameter, flag, hook, base class or indirection** | The present caller or requirement that forces it — "a second caller later" is not one. For an abstraction, the two or three existing instances it unifies; one means inline it. Trace one request and list the files a reader opens, with a concrete requirement for each hop past three. |
-| **Branches on a kind, mode, region or entity type** | The mapping that replaces it — a dict keyed by the enum, an exhaustive `match`, a pipeline of pure transforms — or why control flow is genuinely required. |
-| **Adds a boundary** (HTTP, LLM structured output, file, external client, config) | The type at that edge and the concept each primitive stands for. When it fails, where the error surfaces and who acts on it. |
-| **Crosses a repo boundary** | The contract's shape, which repo owns it, and what the consumer does with an absent or unknown value while the producer is unmerged. Decide the shape here; amend the note as its detail firms up. |
-
-Every answer is a noun — a path, a type, a caller, a rejected sketch. "Cleaner" or
-"more idiomatic" without the concrete thing behind it is dropped, and the size of
-the change does not waive the seven.
 
 **Write each note to `<that repo>/.vicaris/design-notes-<branch>.md`** — the repo
 it describes, not the primary — never only in the response, which compaction

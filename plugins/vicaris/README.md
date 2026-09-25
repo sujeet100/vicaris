@@ -147,7 +147,7 @@ Every stage is also a standalone skill, so you can run one on its own.
 | | |
 |---|---|
 | **Skills** | `/vicaris` (the orchestrator), `/understand`, `/implement`, `/design-challenge`, `/adversarial-review`, `/test`, `/handover`, `/finalize` |
-| **References** | `autonomy` (the contract and standing resolutions) · `risk-classes` (what each class buys) · `gates` (what must be green, the two-pass cap) · `coding-principles` (the standard) · `multi-repo` (the manifest and per-repo invariants) · `notifications` (the Slack drumbeat) · `project-context.template` |
+| **References** | `autonomy` (the contract and standing resolutions) · `risk-classes` (what each class buys) · `gates` (what must be green, the two-pass cap) · `coding-principles` (the standard) · `design-note` (the eight questions asked before the first edit) · `multi-repo` (the manifest and per-repo invariants) · `notifications` (the Slack drumbeat) · `project-context.template` |
 | **Agents** | `blind-designer` (Fable, read-only, no shell, so it cannot see the branch) · `acceptance-criteria` (Sonnet, read-only) |
 | **Scripts** | `vicaris-risk.sh` (observed class, raise-only) · `vicaris-gate.sh` (records each repo's verify) · `vicaris-parity.sh` (every instance of a pattern, touched or not) · `vicaris-status.sh` (per-repo coverage) · `mr-review-root.sh` · `browser-login-helper.sh` (keychain login that keeps passwords out of the model's context) |
 | **Hooks** | `SessionStart` re-injects the run's state; `PreCompact` warns when the handover doc is stale |
