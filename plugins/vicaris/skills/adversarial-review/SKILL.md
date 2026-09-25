@@ -195,8 +195,10 @@ Ping Slack per `${CLAUDE_PLUGIN_ROOT}/references/notifications.md` when the revi
 starts (over which repos) and when it lands (counts by severity plus the headline
 of anything non-trivial, never the full list).
 
-Hand the ranked fix list to a fix pass, **applying each finding in the repo it
-names**, re-verifying that repo with `scripts/vicaris-gate.sh`, and re-running the
+Hand the ranked fix list to a fix pass — **one sub-agent per pass**, on the class's
+build model, given the decided list and the ledger path
+(`${CLAUDE_PLUGIN_ROOT}/references/delegation.md`) — **applying each finding in the
+repo it names**, re-verifying that repo with `scripts/vicaris-gate.sh`, and re-running the
 contract tests if the seam moved. Findings are decided, not applied, with the
 two-pass cap and the ledger at `<primary>/.vicaris/fix-ledger-<branch>.md`, all per
 `${CLAUDE_PLUGIN_ROOT}/references/gates.md`. Stop early if a fix reverses one from

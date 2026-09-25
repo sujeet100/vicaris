@@ -22,9 +22,9 @@ case invoke it again.
 
 The **write step** is routine: run it at every stage boundary (understand,
 implement, review, test, finalize), when an observable tripwire fires (a third
-review-fix pass, a third verification iteration, more than about six sub-agents,
-or every stage done and still not finished), and immediately when a `PreCompact`
-hook says the doc is missing or stale. Never key it to a context percentage; you
+review-fix pass, a third verification iteration, or every stage done and still not
+finished), and immediately when a `PreCompact` hook says the doc is missing or
+stale. Never key it to a context percentage; you
 cannot see one.
 
 The **hand-off step**, actually ending the session, is rarer: only when a fresh

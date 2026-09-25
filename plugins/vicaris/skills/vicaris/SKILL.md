@@ -26,7 +26,8 @@ write step from context, invoking it again if a compaction dropped its field lis
 
 1. Read `${CLAUDE_PLUGIN_ROOT}/references/`: `autonomy.md` (never ask, whole scope,
    the closed blocker list), `risk-classes.md`, `gates.md`, `multi-repo.md`,
-   `notifications.md`, `coding-principles.md`, and `project-context.md` if present.
+   `notifications.md`, `delegation.md`, `coding-principles.md`, and
+   `project-context.md` if present.
 2. **Keep the machine awake**, and record the PID, because finalize kills *this*
    process only (a pattern kill can take down a session launched under
    `caffeinate`):
@@ -62,9 +63,11 @@ write step from context, invoking it again if a compaction dropped its field lis
    the name and Slack member ID as plain text.
 8. **Effort:** high on every stage, set explicitly (Opus 5.5 defaults to `medium`).
 
-**Models.** Opus: understanding, design notes, design comparison, review, finalize.
-Sonnet: the build at `mechanical`–`normal`, and the acceptance-criteria pass. Fable:
-the blind designer only, so it differs from the model that wrote the notes.
+**Delegation.** `delegation.md` decides what runs here and what runs in a sub-agent,
+on which model, and what each sub-agent's prompt carries. Its short form: you
+sequence, decide and fan out; every stage that reads, edits, runs or drives code is
+one sub-agent. Fable is the blind designer only, so it differs from the model that
+wrote the notes.
 
 ## Step 1 — Understand (opus sub-agent)
 
@@ -119,11 +122,16 @@ Ping at each stage boundary per `notifications.md`.
 
 ## Step 2 — Implement
 
-Run the `implement` skill in **auto mode**. Design (Steps 1–2c) is yours, on opus.
-The build (Steps 3–6b) goes to one sonnet sub-agent at `mechanical`, `tiny` and
-`normal` per its Step 2d, and stays with you on opus at `elevated` and
-`production`. Check a sonnet build's verify results and note amendments before the
-gate; a red build comes to you, not back to sonnet. Then refresh the handover doc.
+The `implement` skill runs in three parts, because its middle part fans out:
+
+1. **Design** — one **opus** sub-agent runs its Steps 1–2b and stops before 2c. It
+   writes the Step 1 rules list and every repo's design note to disk.
+2. **Challenge** — you run Step 2c, the `design-challenge` skill, here: it spawns
+   its own two agents, which a sub-agent cannot.
+3. **Build** — you spawn the one build sub-agent per its Step 2d, on the class's
+   build model, and check its verify files and note amendments before the gate.
+
+Then refresh the handover doc.
 
 ## Step 2d — The gate
 
@@ -155,22 +163,27 @@ A gate failure is not a blocker: fix, re-run, continue.
 
 ## Step 3 — Adversarial review
 
-Run the `adversarial-review` skill. Findings are decided, not applied, and the fix
-loop caps at two passes, both recorded in `<primary>/.vicaris/fix-ledger-<branch>.md`
+Run the `adversarial-review` skill. You decide the findings; each fix pass is one
+sub-agent on the class's build model (`delegation.md`). The fix loop caps at two
+passes, both recorded in `<primary>/.vicaris/fix-ledger-<branch>.md`
 (`gates.md`). At the cap, carry what is outstanding into the completion doc and
 every affected MR description, ping the thread, and move on. Refresh the handover
 doc before the second fix pass.
 
 ## Step 4 — Test
 
-Run the `test` skill. Fix and re-test what fails, capped at two passes. If blocked on
-SSO, Slack the owner and continue with the rest. Refresh the handover doc when the
+Spawn one sub-agent on the class's build model to run the `test` skill, including
+its fix-and-re-test loop, capped at two passes; the browser output never enters
+your context. If it reports SSO blocked, it has already told the owner: continue
+with the rest. Refresh the handover doc when the
 stage closes and before the second fix pass.
 
 ## Step 5 — Finalize
 
 Run the `finalize` skill: completion doc, one MR per repo, MR review on each, Slack
-wrap-up, stop the `caffeinate`. A finding the local review already parked is answered
+wrap-up, stop the `caffeinate`. It stays here because its fix loop re-enters review,
+but its waits on pipelines and evals are background loops and its fixes are fix
+sub-agents (`delegation.md`). A finding the local review already parked is answered
 with its ledger line, not relitigated. The task is not done until this exits zero:
 
 ```bash
@@ -190,8 +203,6 @@ Refresh it now, and say so in the thread, when any of these fire:
 
 - the review fix loop reaches a third pass
 - a verification loop (evals, CI, browser) reaches a third iteration
-- more than about six sub-agents have run (the design challenge's two and a
-  sonnet build are expected)
 - every stage has run and the task is still not finished
 
 End the session only when a fresh one is genuinely cheaper, never mid-stage; say so

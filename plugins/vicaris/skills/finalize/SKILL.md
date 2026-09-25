@@ -83,8 +83,9 @@ Then run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/vicaris-status.sh"`; it exits
 non-zero on a repo with commits and no MR.
 
 **If the change touched prompts and the sidecar names an eval gate**, run it where
-the sidecar says (typically a job on **each MR's** pipeline) and monitor it to
-green; fold any regression back through implement → review. With no eval named,
+the sidecar says (typically a job on **each MR's** pipeline) and wait for it with a
+background loop, never by polling (`references/delegation.md`); fold any regression
+back through implement → review. With no eval named,
 say in the completion doc that the prompt change went unevaluated.
 
 ## Step 3 — MR review, on every MR
@@ -105,8 +106,8 @@ add up to a clean review of the whole change.
 
 Ping the thread with each MR's verdict, and again once its comments are resolved.
 
-Feed blocker/should-fix findings back through implement → review → test, applying
-each in its own repo and re-running that repo's verify (through
+Feed blocker/should-fix findings back through implement → review → test, each fix
+pass one sub-agent on the class's build model, applying each finding in its own repo and re-running that repo's verify (through
 `scripts/vicaris-gate.sh`) plus the integrated path. Apply and re-review rather
 than stopping; only genuine external blockers pause the run.
 

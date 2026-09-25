@@ -20,8 +20,10 @@ invalidates it.
 **Steps 1–2c are design and run on opus.** **Steps 3–6b are the build and run on
 the model the risk class names** — sonnet at `mechanical`, `tiny` and `normal`,
 opus at `elevated` and `production` (`${CLAUDE_PLUGIN_ROOT}/references/risk-classes.md`).
-Step 2d is the handoff. Run standalone on another model, do Steps 1–2c on an opus
-sub-agent or switch to opus first.
+Step 2d is the handoff. In an orchestrated run the design is itself a sub-agent that
+runs Steps 1–2b and stops, and the orchestrator runs 2c and 2d
+(`${CLAUDE_PLUGIN_ROOT}/references/delegation.md`). Run standalone on another model,
+do Steps 1–2c on an opus sub-agent or switch to opus first.
 
 ## Step 1 — Name the bar for *this* change
 
@@ -34,7 +36,8 @@ Step 0 loads them in its own session; a sub-agent has not seen them). Always
 read each repo's `CLAUDE.md` and convention docs; Step 0 never loads those.
 
 Having the rules in context is not reasoning against them, so before any edit write
-out, briefly, in the run:
+out, briefly, at the top of `<primary-repo>/.vicaris/design-notes-<branch>.md` under
+`## Rules` — on disk, because the build runs in another context:
 
 1. **Applicable rules.** The five to ten that bear on this change, named
    by the repo's own id where its conventions number them, otherwise by the
@@ -45,8 +48,7 @@ out, briefly, in the run:
    which wins where two conflict.
 
 Step 3's self-check grades against this list. Don't edit anything until it exists.
-When Step 2d hands off the build, the list goes with it verbatim — at `mechanical`
-and `tiny` it is the whole design.
+The build reads it from there; at `mechanical` and `tiny` it is the whole design.
 
 ## Step 2 — Load the repo set
 
@@ -86,6 +88,9 @@ flattens. Placement and the local `.vicaris/` exclude are in
 
 ## Step 2c — Challenge the design, before the first edit
 
+**Running as the design sub-agent, stop here** and report the note paths; the
+orchestrator runs this step and the next, since both spawn agents.
+
 Your note's comparisons were made by the pass that already chose, so they catch
 over-building but not a wrong approach. Run the `design-challenge` skill: it builds
 a second design from the acceptance criteria alone and compares the two, and it
@@ -99,32 +104,31 @@ review weighs if a reviewer proposes the same thing.
 
 ## Step 2d — Hand the build to the build model
 
-Read the class from `<primary-repo>/.vicaris/risk-<branch>.txt`. At `elevated` and
-`production`, carry on yourself on opus into Step 3. At `mechanical`, `tiny` and
-`normal`, spawn **one** sub-agent with `subagent_type: general-purpose` and
-`model: sonnet` to run Steps 3–6b across the whole manifest. Never `fork`: a fork
-always runs on the parent's model.
+Read the class from `<primary-repo>/.vicaris/risk-<branch>.txt` and spawn **one**
+sub-agent with `subagent_type: general-purpose` to run Steps 3–6b across the whole
+manifest: `model: sonnet` at `mechanical`, `tiny` and `normal`, `model: opus` at
+`elevated` and `production`. Do not build inline at any class — every build turn in
+this context re-reads all of it. Never `fork`: a fork always runs on the parent's
+model.
 
-Its prompt carries everything the build must not re-decide:
+Its prompt carries what `${CLAUDE_PLUGIN_ROOT}/references/delegation.md` lists for
+every stage sub-agent, plus everything the build must not re-decide:
 
-- the path to this skill, and the instruction to follow Steps 3–6b in auto mode,
-  including the per-repo Slack pings and the gate script in Step 6;
+- the instruction to follow Steps 3–6b, including the per-repo Slack pings and the
+  gate script in Step 6;
 - the path `${CLAUDE_PLUGIN_ROOT}/references/coding-principles.md`, to read before
   the first slice, plus each repo's convention docs from Step 1;
-- the owner's name and Slack member ID as resolved in the **Owner** line above —
-  the agent reads this skill as a file, so its placeholders are not filled in;
-- the manifest path, the branch, and the dependency order;
-- the Step 1 list — applicable rules, exemplars, rule per decision — verbatim;
-- every repo's `design-notes-<branch>.md` path, as amended by the challenge, with
-  the rule that the note is the design: where building shows it is wrong, amend the
-  note and say why in the report rather than drifting from it silently;
+- every repo's `design-notes-<branch>.md` path, as amended by the challenge — the
+  primary's opens with the Step 1 rules — with the rule that the note is the
+  design: where building shows it is wrong, amend the note and say why in the
+  report rather than drifting from it silently;
 - the test surface from `<primary-repo>/.vicaris/understanding-<branch>.md` and
   any prompt-change constraints from the sidecar.
 
 When it returns, read each repo's `verify-<branch>.txt` rather than trusting the
 summary, and re-read the design notes for amendments. A build that came back red or
-with an unexplained departure from its note is not handed to review: fix it
-yourself on opus.
+with an unexplained departure from its note is not handed to review: spawn a fresh
+**opus** fix sub-agent with the failure and the note, rather than repairing it here.
 
 ## Step 3 — Build it, one slice at a time
 
@@ -144,8 +148,9 @@ with "and" in it, a docstring citing a renamed caller, a choice that falls out o
 emission order. This is not the review; its job is to not hand review the
 mechanical stuff.
 
-Hold `${CLAUDE_PLUGIN_ROOT}/references/coding-principles.md` and the Step 1 list live
-while writing (read the principles first if they are not in your context). Keep
+Hold `${CLAUDE_PLUGIN_ROOT}/references/coding-principles.md` and the Step 1 list —
+the `## Rules` section of the primary's design notes — live while writing (read the
+principles first if they are not in your context). Keep
 unrelated cleanup out of the change, and no speculative abstraction.
 
 If the change is explicitly **temporary / scratch / just-to-test**: make only the

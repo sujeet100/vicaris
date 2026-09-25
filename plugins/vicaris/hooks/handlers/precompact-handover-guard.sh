@@ -40,18 +40,9 @@ set -uo pipefail   # deliberately not -e: this hook fails open, never breaks a s
 
 [ "${VICARIS_PRECOMPACT_OFF:-0}" = "1" ] && exit 0
 
-# Is the handover doc older than the branch's newest commit? Compared as timestamps, not
-# via `.git/HEAD`: in a git *worktree* — which is how Vicaris runs whenever the owner has
-# uncommitted work — `$repo_root/.git` is a file rather than a directory, so `.git/HEAD`
-# does not exist and a `-ot` test against it silently returns false. That made staleness
-# undetectable in exactly the case it matters.
-handover_is_stale() {
-  local doc="$1" root="$2" doc_mtime commit_ts
-  [ -f "$doc" ] || return 1
-  doc_mtime=$(stat -f %m "$doc" 2>/dev/null || stat -c %Y "$doc" 2>/dev/null) || return 1
-  commit_ts=$(git -C "$root" log -1 --format=%ct 2>/dev/null) || return 1
-  [ -n "$doc_mtime" ] && [ -n "$commit_ts" ] && [ "$doc_mtime" -lt "$commit_ts" ]
-}
+# shellcheck source=handover-stale.sh
+source "$(dirname "${BASH_SOURCE[0]}")/handover-stale.sh" 2>/dev/null \
+  || handover_is_stale() { return 1; }   # fail open
 
 repo_root=$(git rev-parse --show-toplevel 2>/dev/null) || exit 0
 branch=$(git -C "$repo_root" rev-parse --abbrev-ref HEAD 2>/dev/null) || exit 0
@@ -78,8 +69,8 @@ fi
 needs_write=""
 if [ ! -f "$handover" ]; then
   needs_write="no handover doc exists for this branch"
-elif handover_is_stale "$handover" "$repo_root"; then
-  needs_write="the handover doc predates the latest commit on this branch"
+elif handover_is_stale "$handover" "$repo_root" "$manifest"; then
+  needs_write="the handover doc predates the latest work on this branch"
 fi
 
 [ -z "$needs_write" ] && exit 0

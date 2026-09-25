@@ -17,18 +17,9 @@ set -uo pipefail   # fails open by design
 
 [ "${VICARIS_SESSION_CONTEXT_OFF:-0}" = "1" ] && exit 0
 
-# Is the handover doc older than the branch's newest commit? Compared as timestamps, not
-# via `.git/HEAD`: in a git *worktree* — which is how Vicaris runs whenever the owner has
-# uncommitted work — `$repo_root/.git` is a file rather than a directory, so `.git/HEAD`
-# does not exist and a `-ot` test against it silently returns false. That made staleness
-# undetectable in exactly the case it matters.
-handover_is_stale() {
-  local doc="$1" root="$2" doc_mtime commit_ts
-  [ -f "$doc" ] || return 1
-  doc_mtime=$(stat -f %m "$doc" 2>/dev/null || stat -c %Y "$doc" 2>/dev/null) || return 1
-  commit_ts=$(git -C "$root" log -1 --format=%ct 2>/dev/null) || return 1
-  [ -n "$doc_mtime" ] && [ -n "$commit_ts" ] && [ "$doc_mtime" -lt "$commit_ts" ]
-}
+# shellcheck source=handover-stale.sh
+source "$(dirname "${BASH_SOURCE[0]}")/handover-stale.sh" 2>/dev/null \
+  || handover_is_stale() { return 1; }   # fail open
 
 repo_root=$(git rev-parse --show-toplevel 2>/dev/null) || exit 0
 branch=$(git -C "$repo_root" rev-parse --abbrev-ref HEAD 2>/dev/null) || exit 0
@@ -56,8 +47,8 @@ fi
     printf '**No handover doc exists for this branch, and context has just been summarised.**\n'
     printf 'Write one now, before doing anything else — the detail it should capture is exactly what\n'
     printf 'a compaction discards:\n`%s`\n\n' "$handover"
-  elif handover_is_stale "$handover" "$repo_root"; then
-    printf '**The handover doc predates the latest commit on this branch, so it is stale.**\n'
+  elif handover_is_stale "$handover" "$repo_root" "$manifest"; then
+    printf '**The handover doc predates the latest work on this branch, so it is stale.**\n'
     printf 'Refresh it now; work has happened that it does not record:\n`%s`\n\n' "$handover"
   else
     printf 'A handover doc exists and is the authority on where things stand — **read it before acting**:\n`%s`\n\n' "$handover"

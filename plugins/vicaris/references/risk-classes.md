@@ -42,7 +42,7 @@ migration checks, plus a completion doc with a rollback plan.
 | Understand — full NFR table | short form | short form | ✓ | ✓ | ✓ |
 | Design note (`implement` 2b) | skip | skip | ✓ | ✓ | ✓ |
 | Design challenge | skip | skip | skip | ✓ | ✓ |
-| Build model (`implement` 3–6b) | sonnet | sonnet | sonnet | opus | opus |
+| Build model (`implement` 3–6b, fix passes, `test`) | sonnet | sonnet | sonnet | opus | opus |
 | Parity check | **required** | — | where a part repeats a pattern | where a part repeats a pattern | **required** |
 | Deterministic gates | ✓ | ✓ | ✓ | ✓ | ✓ |
 | Regression test proving the fix | — | **required** | where a bug is fixed | where a bug is fixed | where a bug is fixed |
@@ -61,7 +61,9 @@ opus — in the design note, or in the rules and exemplars named before it — s
 sonnet executes it, at half the price, in the stage that uses the most tokens. At `elevated`
 and `production` the contract still firms up while the producer is written, and a
 wrong call crosses a repo boundary before any reviewer sees it, so the build stays
-on opus. Design, review and the design comparison run on opus at every class.
+on opus. Fix passes and `test` follow the build model, since the findings and the
+test surface they act on were decided on opus. Design, review and the design
+comparison run on opus at every class. Where each runs is in `delegation.md`.
 
 The review row becomes `review-changes` flags in `adversarial-review` Step 2.
 
