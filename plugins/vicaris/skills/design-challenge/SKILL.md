@@ -92,8 +92,7 @@ output.
 
 Spawn one agent with `subagent_type: blind-designer` (shipped in `agents/`).
 **Never `fork`**: a fork inherits the author's context, which is the contamination
-the extract removes. The definition makes the isolation structural — it pins fable
-and grants only Read, Grep and Glob, so the agent cannot run `git` or leave the
+the extract removes. The definition makes the isolation structural — it pins Fable 5.1 and grants only Read, Grep and Glob, so the agent cannot run `git` or leave the
 extract. Keep it on a different model from whoever wrote the notes: a second design
 from the same model tends to make the same root choices.
 
@@ -123,7 +122,7 @@ names, no hedging toward what someone else might have chosen.
 
 ## Step 3 — Compare the two (one **opus** sub-agent, fresh context)
 
-Spawn one `lead` (`subagent_type: lead`, opus at high effort). It receives both designs as text — the blind
+Spawn one `lead` (`subagent_type: lead`, Opus 5.5 at high effort). It receives both designs as text — the blind
 sketch and every repo's design note — and reads `$MRR/charter/blind_compare.md`,
 told this:
 

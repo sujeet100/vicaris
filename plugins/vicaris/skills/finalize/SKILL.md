@@ -11,6 +11,10 @@ allowed-tools: Bash, Read, Write, Glob, Grep, Skill, mcp__claude_ai_Slack__slack
 and in the references). Slack goes to member `${user_config.slack_user_id}`, else the
 sidecar's Slack target, else record Slack as unavailable in the degraded list.
 
+**Model:** Sonnet 5.5 (the `builder` agent). Everything here carries out what was
+already decided, except the call on the MR review's findings in Step 3, which goes
+to a short Opus 5.5 `lead`.
+
 Close out the task. Read `${CLAUDE_PLUGIN_ROOT}/references/project-context.md`
 (MR-reviewer command, Slack target) and `${CLAUDE_PLUGIN_ROOT}/references/multi-repo.md`
 (the repo set). Skip a plugin reference only if it is already in your context (the orchestrator's
@@ -106,10 +110,18 @@ add up to a clean review of the whole change.
 
 Ping the thread with each MR's verdict, and again once its comments are resolved.
 
-Feed blocker/should-fix findings back through implement → review → test, each fix
-pass one `builder` on the class's build model, applying each finding in its own repo and re-running that repo's verify (through
-`scripts/vicaris-gate.sh`) plus the integrated path. Apply and re-review rather
-than stopping; only genuine external blockers pause the run.
+**Hand the verdicts to a short `lead` to decide** (`subagent_type: lead`, Opus 5.5):
+it gets each MR's findings and the ledger path, decides apply or decline for each
+with its reason in the ledger, and rewrites in place the design-note section any
+applied finding changes (`design-note.md`, *Keeping it current*). You don't decide
+them yourself: an applied finding can change a design decision, and that call is
+Opus's.
+
+Feed the applied blocker/should-fix findings back through implement → review → test,
+each fix pass one `builder` per repo (`delegation.md`), applying each finding in its
+own repo and re-running that repo's verify (through `scripts/vicaris-gate.sh`) plus
+the integrated path. Apply and re-review rather than stopping; only genuine external
+blockers pause the run.
 
 **Two passes, then stop** (`references/gates.md`), each outcome in the ledger. A
 suggestion the local review already parked does not come back: answer it with the

@@ -14,7 +14,7 @@ sidecar's Slack target, else record Slack as unavailable in the degraded list.
 Establish what `$ARGUMENTS` has to be true of, and how much ceremony the rest of
 the run earns. Read and decide; do not design or edit code.
 
-**Model:** opus, medium effort (the `analyst` agent). Run directly on another
+**Model:** Opus 5.5, medium effort (the `analyst` agent). Run directly on another
 model, delegate to an `analyst` sub-agent.
 
 ## Step 1 — Load the bar

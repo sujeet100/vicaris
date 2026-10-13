@@ -108,6 +108,37 @@ Answer only the rows that apply. Each answer names something.
 | **Touches a prompt or an LLM-facing schema description** | Prompt or code: intent and shape belong in the prompt; a count, fallback, closed set, or format belongs in a validator or post-processing. The canonical section the rule lives in today, or will — name it, so a third copy is visible. The schema descriptions the LLM sees alongside this rule, and whether they still agree. |
 | **Crosses a repo boundary** | The contract's shape, which repo owns it, and what the consumer does with an absent or unknown value while the producer is unmerged. Decide the shape here; amend the note as its detail firms up. |
 
+## What else the note holds
+
+After the rows, these sections and nothing else:
+
+- **Files.** Each file the change touches, one line: the unit and what changes in
+  it, by concept. Not the exact lines, keys or job definitions; those are the
+  build's call, and a note that fixes them gets them reviewed back out. Then what
+  is deliberately not touched.
+- **Tests that pin this design.** Only the tests the design's own decisions need: a
+  rule it chose, a limit it accepted, a path that must stay byte-identical. Tests
+  for the acceptance criteria come from the understanding's test surface; don't
+  restate them.
+- **Assumptions.** Each with a one-line self-critique.
+- **Follow-on outside the manifest**, if any: operational steps `finalize` must
+  carry into the completion record.
+- **Kept on purpose**, added by the build's simplify step: one line per candidate
+  it kept, with the rule-shaped reason.
+
+Verify commands and worktree quirks are run facts, not design; they belong in the
+handover's *Environment* section.
+
+## Keeping it current
+
+The note states the design as it now stands: `finalize` quotes it as the reasoning
+behind what shipped, and review uses it to settle a finding that proposes a rejected
+design. So a later stage that changes a decision (the build, a fix pass, an
+MR-review fix) rewrites the section that states it, in place, marked with where it
+changed (`changed in review, A4`). It never appends a section of its own. What a
+stage did, its verify result and the findings it fixed go to its report and the fix
+ledger: one decision, written in one place.
+
 ## What a real answer looks like
 
 Every answer above is a noun: a file path, a type, a caller, a section heading, a

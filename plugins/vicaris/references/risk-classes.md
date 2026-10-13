@@ -42,7 +42,7 @@ migration checks, plus a completion doc with a rollback plan.
 | Understand — every Step 3 row | short form | short form | ✓ | ✓ | ✓ |
 | Design note (`implement` 2b) | skip | skip | ✓ | ✓ | ✓ |
 | Design challenge | skip | skip | skip | ✓ | ✓ |
-| Build model (`implement` 3–6b, fix passes, `test`) | sonnet | sonnet | sonnet | opus | opus |
+| Build model (`implement` 3–6b, fix passes, `test`) | Sonnet 5.5 | Sonnet 5.5 | Sonnet 5.5 | Sonnet 5.5 | Sonnet 5.5 |
 | Parity check | **required** | — | where a part repeats a pattern | where a part repeats a pattern | **required** |
 | Deterministic gates | ✓ | ✓ | ✓ | ✓ | ✓ |
 | Regression test proving the fix | — | **required** | where a bug is fixed | where a bug is fixed | where a bug is fixed |
@@ -56,17 +56,21 @@ migration checks, plus a completion doc with a rollback plan.
 | Completion doc | five lines | short | ✓ | ✓ | ✓ + rollback plan |
 | MR + standalone MR review | ✓ | ✓ | ✓ | ✓ | ✓ |
 
-**Build model.** At `normal` and below the build's shape is already decided on
-opus — in the design note, or in the rules and exemplars named before it — so
-sonnet executes it. The saving is real but smaller than the list price suggests:
-Sonnet halves cache writes and output, while cache reads, most of a build's tokens,
-cost about the same on Opus 5.5, and Opus can finish in fewer steps. Re-measure it
-on real runs before widening or narrowing the sonnet classes. At `elevated`
-and `production` the contract still firms up while the producer is written, and a
-wrong call crosses a repo boundary before any reviewer sees it, so the build stays
-on opus. Fix passes and `test` follow the build model, since the findings and the
-test surface they act on were decided on opus. Design, review and the design
-comparison run on opus at every class. Where each runs is in `delegation.md`.
+**Build model.** Judgement runs on Opus 5.5: understanding, design, the design
+comparison, review and the decision on every finding. What reaches the build has
+already been decided there, in the design note, the rules and exemplars named before
+it, or the fix ledger, so Sonnet 5.5 carries it out at every class, and fix passes
+and `test` follow it. The split holds only if a decision never forms inside the
+build: where building or a finding shows a design decision is wrong, the decision
+goes back to an Opus stage, which rewrites the note in place (`design-note.md`,
+*Keeping it current*), and Sonnet then builds to the amended note. That covers the
+case that once kept `elevated` and `production` builds on Opus, a cross-repo
+contract that firms up while the producer is written: the contract's shape is the
+design note's to decide, and a change to it is a design change. The saving is
+smaller than the list price suggests: Sonnet halves cache writes and output, while
+cache reads, most of a build's tokens, cost the same. Opus 5.5 builds only to repair
+a stage that came back red or departed from its note. Where each runs is in
+`delegation.md`.
 
 The review row becomes `review-changes` flags in `adversarial-review` Step 2.
 

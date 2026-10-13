@@ -1,7 +1,7 @@
 ---
 name: lead
-description: Runs one judgement stage of a Vicaris run — design and its challenge, review, or finalize — on opus at high effort, and reports back in a few lines.
-model: opus
+description: Runs one judgement stage of a Vicaris run — design and its challenge, review, or deciding the MR review's findings — on Opus 5.5 at high effort, and reports back in a few lines.
+model: claude-opus-5-5
 effort: high
 ---
 

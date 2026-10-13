@@ -18,27 +18,38 @@ happens inside the stage that owns it, on opus.
 
 | Stage | Agent | Model · effort |
 |---|---|---|
-| Orchestrator | the main session | opus · medium |
-| `understand` | `analyst` | opus · medium |
-| Design and its challenge (`implement` Steps 1–2c) | `lead`, which spawns the blind designer and the comparer | opus · high; `blind-designer` fable · high; comparer `lead` |
-| Build (`implement` Steps 3–6b) | `builder` | the class's build model · high |
-| `adversarial-review`, deciding its findings | `lead`, which spawns reviewers and fix passes | opus · high |
-| Fix pass (review, test, MR review) | `builder`, spawned by the stage that found it | the class's build model · high |
-| Acceptance-criteria pass | `acceptance-criteria` | sonnet · high |
-| `test` | `builder` | the class's build model · high |
-| `finalize` | `lead`, whose fix loop re-enters review | opus · high |
+| Orchestrator | the main session, set by the `vicaris` skill | Opus 5.5 · medium |
+| `understand` | `analyst` | Opus 5.5 · medium |
+| Design and its challenge (`implement` Steps 1–2c) | `lead`, which spawns the blind designer and the comparer | Opus 5.5 · high; `blind-designer` Fable 5.1 · high; comparer `lead` |
+| Build (`implement` Steps 3–6b) | `builder` | Sonnet 5.5 · high |
+| `adversarial-review`, deciding its findings | `lead`, which spawns reviewers and fix passes | Opus 5.5 · high |
+| Fix pass (review, test, MR review) | `builder`, one per repo, spawned by the stage that found it | Sonnet 5.5 · high |
+| Acceptance-criteria pass | `acceptance-criteria` | Sonnet 5.5 · high |
+| `test` | `builder` | Sonnet 5.5 · high |
+| Repair of a stage that came back red | `builder-opus` | Opus 5.5 · high |
+| `finalize` | `builder`, whose fix loop re-enters review | Sonnet 5.5 · high |
+| Deciding the MR review's findings (`finalize` Step 3) | a short `lead`, spawned by finalize | Opus 5.5 · high |
 
-The build model per class is in `risk-classes.md`: sonnet at `mechanical`, `tiny`
-and `normal`, opus at `elevated` and `production`. Pass it as `model:` when spawning
-`builder`; the call's `model` overrides the definition's, and its `effort` stays.
+**Opus decides, Sonnet builds.** Every execution stage runs on `builder` (Sonnet
+5.5) at every risk class, because what it executes was decided on Opus
+(`risk-classes.md`, *Build model*). `builder-opus` (Opus 5.5) only repairs a stage
+that came back red or departed from its note. Pass no `model:` at the call: every
+definition pins a full model ID, and an alias passed at the call would override it.
+
+**Models are pinned by full ID, never by alias.** The aliases mean different models
+on different providers: on the Anthropic API `sonnet` is Sonnet 5.5, but on Bedrock
+and Google Cloud it is Sonnet 4.5, and on Foundry `opus` is Opus 4.6. So every agent
+names `claude-opus-5-5`, `claude-sonnet-5-5` or `claude-fable-5-1`, and moving to a
+new generation is a deliberate edit to `agents/`, with the effort levels below
+re-checked, since each generation recalibrates them.
 
 **Effort lives in the agent definitions**, because the effort of a plain
-`general-purpose` spawn is undocumented. The orchestrator runs at medium: Opus 5.5 at
-medium beats Opus 5 at high, it thinks more per turn at any level than its
-predecessor, and most orchestrator calls sequence rather than judge. Understand runs at medium too: it reads and classifies more than it weighs
-alternatives, and Opus 5.5 at medium still beats Opus 5 at high. The stages
-that weigh designs and findings run at high, and so does the build, where high is Sonnet 5's
-recommended default.
+`general-purpose` spawn is undocumented. The orchestrator runs at medium: Opus 5.5
+at medium beats Opus 5 at high, it thinks more per turn at any level than its
+predecessor, and most orchestrator calls sequence rather than judge. Understand runs
+at medium too: it reads and classifies more than it weighs alternatives, and Opus
+5.5 at medium still beats Opus 5 at high. The stages that weigh designs and findings
+run at high, and so does the build, where high is Sonnet 5.5's default.
 
 **Sub-agents can spawn sub-agents**, three levels below the main session by default
 (Claude Code 2.1.219 and later; `CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH` raises it).
@@ -64,8 +75,7 @@ filled in. Give it facts and paths, never content it can read itself:
   per repo, and anything it could not do.
 
 When it returns, check the files it was meant to write, not its report. A stage that
-came back red or with an unexplained departure goes to a fresh `builder` on **opus**
-with the failure, never to an inline repair in the orchestrator.
+came back red or with an unexplained departure goes to a fresh `builder-opus` with the failure, never to an inline repair in the orchestrator.
 
 ## Waiting is not work
 

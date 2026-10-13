@@ -139,7 +139,7 @@ Run only where `risk-classes.md`'s acceptance-criteria row is ✓, so skip it at
 `review-changes`' PO pass sees one repo and would call everything the other side
 delivers missing. Run the criteria review here instead, as **one** sub-agent over
 the whole change with `subagent_type: acceptance-criteria` (shipped in `agents/`,
-pinned to sonnet). With no definition, use `general-purpose` on `model: sonnet`.
+pinned to Sonnet 5.5). With no definition, use `general-purpose` on `model: sonnet`.
 
 Give it the repo list with each base and the story with its criteria; it pulls the
 diffs itself. Point it at `<mr-review>/charter/stage_po.md` (resolve with
@@ -195,12 +195,23 @@ Ping Slack per `${CLAUDE_PLUGIN_ROOT}/references/notifications.md` when the revi
 starts (over which repos) and when it lands (counts by severity plus the headline
 of anything non-trivial, never the full list).
 
-Hand the ranked fix list to a fix pass — **one `builder` per pass**, on the class's
-build model, given the decided list and the ledger path
-(`${CLAUDE_PLUGIN_ROOT}/references/delegation.md`) — **applying each finding in the
-repo it names**, re-verifying that repo with `scripts/vicaris-gate.sh`, and re-running the
-contract tests if the seam moved. Findings are decided, not applied, with the
-two-pass cap and the ledger at `<primary>/.vicaris/fix-ledger-<branch>.md`, all per
+Before handing anything over, take every decided finding that changes a design
+decision (a rule, a contract's shape, an accepted limit, new behaviour the note does
+not describe) and rewrite the section of that repo's note that states it, in place
+(`design-note.md`, *Keeping it current*). You hold the decision; the builder carries
+it out, and a decision formed inside a fix pass is what a re-review then has to
+repair.
+
+Then hand the fix list to `builder` (Sonnet 5.5) — **one per repo per pass**, so no
+single agent carries the whole list through a growing context, each given that
+repo's decided findings with blockers and should-fixes first and the suggestions it
+decided to apply last, plus the ledger path
+(`${CLAUDE_PLUGIN_ROOT}/references/delegation.md`). A suggestion not worth a line of
+the builder's time goes under *Skip for now*, not into the list. Each builder
+applies its findings in its own repo, re-verifying that repo with
+`scripts/vicaris-gate.sh`, and re-running the contract tests if the seam moved.
+Findings are decided, not applied, with the two-pass cap and the ledger at
+`<primary>/.vicaris/fix-ledger-<branch>.md`, all per
 `${CLAUDE_PLUGIN_ROOT}/references/gates.md`. Stop early if a fix reverses one from
 the previous pass: that is oscillation, and it wants a human eye.
 

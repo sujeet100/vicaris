@@ -2,6 +2,8 @@
 name: vicaris
 description: Run a story end to end — understand, design, build, review, test, finalize — across every repo it touches, without asking questions, reporting in one Slack thread.
 argument-hint: [Jira key, task description, or feature brief]
+model: claude-opus-5-5
+effort: medium
 allowed-tools: Bash, Read, Write, Edit, Glob, Grep, Agent, Skill, mcp__claude_ai_Slack__slack_send_message, mcp__claude_ai_Atlassian__getJiraIssue, mcp__claude_ai_Atlassian__searchJiraIssuesUsingJql, mcp__claude_ai_Atlassian__getJiraIssueRemoteIssueLinks, mcp__claude_ai_Atlassian__getConfluencePage, mcp__claude_ai_Atlassian__searchConfluenceUsingCql, mcp__claude_ai_Atlassian__getPagesInConfluenceSpace, mcp__claude_ai_Atlassian__getConfluencePageDescendants, mcp__claude_ai_Atlassian__getConfluenceSpaces, mcp__claude_ai_Atlassian__addCommentToJiraIssue, mcp__claude_ai_Atlassian__createConfluencePage, mcp__claude_ai_Atlassian__updateConfluencePage
 ---
 
@@ -61,8 +63,11 @@ write step from context, invoking it again if a compaction dropped its field lis
 7. **Pass the owner on.** Sub-agents reading a skill as a file see `${user_config.…}`
    unfilled, so every sub-agent prompt that can reach Slack or the owner carries
    the name and Slack member ID as plain text.
-8. **Effort:** run this session at medium. Each stage's effort comes from its agent
-   definition (`delegation.md`), high wherever a stage decides or builds.
+8. **Model and effort:** this skill's frontmatter runs the orchestrator on Opus 5.5
+   at medium, for the turn the run happens in; a message from the owner mid-run
+   starts a new turn on the session's own model, so say so in the degraded list if
+   that happens. Each stage's model and effort come from its agent definition
+   (`delegation.md`), pinned by full ID.
 
 **Delegation.** `delegation.md` decides which shipped agent runs each stage, on which
 model and effort, and what each prompt carries. Its short form: you sequence and
@@ -128,8 +133,7 @@ The `implement` skill runs in two sub-agents:
 1. **Design** — `lead` runs its Steps 1–2c: the Step 1 rules and every repo's design
    note to disk, then the `design-challenge` skill, which spawns its own two agents
    and amends the notes where a divergence is adopted.
-2. **Build** — you spawn `builder` per its Step 2d, with the class's build model as
-   `model:`, and check its verify files and note amendments before the gate.
+2. **Build** — you spawn `builder` per its Step 2d, and check its verify files and note amendments before the gate.
 
 Then refresh the handover doc.
 
@@ -164,7 +168,7 @@ A gate failure is not a blocker: fix, re-run, continue.
 ## Step 3 — Adversarial review
 
 Spawn `lead` to run the `adversarial-review` skill. It decides the findings and runs
-each fix pass as a `builder` on the class's build model (`delegation.md`); you read
+each fix pass on `builder`, one per repo (`delegation.md`); you read
 its report and the ledger at `<primary>/.vicaris/fix-ledger-<branch>.md`, not its
 summary. The fix loop caps at two passes (`gates.md`); at the cap it carries what is
 outstanding into the ledger for the completion doc and every affected MR
@@ -172,14 +176,14 @@ description, and moves on. Refresh the handover doc when it returns.
 
 ## Step 4 — Test
 
-Spawn `builder`, with the class's build model as `model:`, to run the `test` skill,
+Spawn `builder` to run the `test` skill,
 including its fix-and-re-test loop, capped at two passes; the browser output never
 enters your context. If it reports SSO blocked, it has already told the owner:
 continue with the rest. Refresh the handover doc when it returns.
 
 ## Step 5 — Finalize
 
-Spawn `lead` to run the `finalize` skill: completion doc, one MR per repo, MR review
+Spawn `builder` to run the `finalize` skill: completion doc, one MR per repo, MR review
 on each, Slack wrap-up, stop the `caffeinate`. Its waits on pipelines and evals are
 background loops, and its fix loop re-enters review from inside it
 (`delegation.md`). A finding the local review already parked is answered

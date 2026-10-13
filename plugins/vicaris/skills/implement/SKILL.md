@@ -1,6 +1,6 @@
 ---
 name: implement
-description: Design and build a change to Sujit's coding principles — design notes on opus, build on sonnet or opus by risk class, tests, simplification pass.
+description: Design and build a change to Sujit's coding principles — design notes on Opus 5.5, build on Sonnet 5.5, tests, simplification pass.
 argument-hint: [path to the understanding doc, or the task]
 allowed-tools: Bash, Read, Write, Edit, Glob, Grep, Skill, Agent, mcp__claude_ai_Slack__slack_send_message, mcp__claude_ai_Atlassian__getJiraIssue, mcp__claude_ai_Atlassian__searchJiraIssuesUsingJql, mcp__claude_ai_Atlassian__getJiraIssueRemoteIssueLinks, mcp__claude_ai_Atlassian__getConfluencePage, mcp__claude_ai_Atlassian__searchConfluenceUsingCql, mcp__claude_ai_Atlassian__getPagesInConfluenceSpace, mcp__claude_ai_Atlassian__getConfluencePageDescendants, mcp__claude_ai_Atlassian__getConfluenceSpaces
 ---
@@ -17,11 +17,11 @@ Build the change described by `<primary>/.vicaris/understanding-<branch>.md` (or
 confirmation. Stop only for a fork the understanding didn't settle, or a discovery that
 invalidates it.
 
-**Steps 1–2c are design and run on opus.** **Steps 3–6b are the build and run on
-the model the risk class names** — sonnet at `mechanical`, `tiny` and `normal`,
-opus at `elevated` and `production` (`${CLAUDE_PLUGIN_ROOT}/references/risk-classes.md`).
-Step 2d is the handoff. In an orchestrated run the design is a `lead` sub-agent that
-runs Steps 1–2c and stops, and the orchestrator runs 2d
+**Steps 1–2c are design and run on Opus 5.5.** **Steps 3–6b are the build and run on
+Sonnet 5.5 at every class**, carrying out what design decided
+(`${CLAUDE_PLUGIN_ROOT}/references/risk-classes.md`, *Build model*). Step 2d is the
+handoff. In an orchestrated run the design is a `lead` sub-agent that runs Steps
+1–2c and stops, and the orchestrator runs 2d
 (`${CLAUDE_PLUGIN_ROOT}/references/delegation.md`). Run standalone on another model,
 do Steps 1–2c on an opus sub-agent or switch to opus first.
 
@@ -68,12 +68,12 @@ exists.
 **Only at `normal` and above** (read `<primary-repo>/.vicaris/risk-<branch>.txt`);
 `mechanical` and `tiny` skip it.
 
-**Read `${CLAUDE_PLUGIN_ROOT}/references/design-note.md` and answer it** against
-the Step 1 rules: the eight questions, then the rows the change touches. **If the
-repo has its own `design-change` skill** (`.claude/skills/design-change/`), run it
-instead — it carries that repo's rows and rule citations — and still answer the
-reference's *Crosses a repo boundary* row when the manifest has more than one repo,
-since a repo's own skill cannot see the others.
+**Read `${CLAUDE_PLUGIN_ROOT}/references/design-note.md` and answer it** against the
+Step 1 rules: the eight questions, the rows the change touches, and the sections
+after them. **If the repo has its own `design-change` skill**
+(`.claude/skills/design-change/`), run it instead — it carries that repo's rows and
+rule citations — and still answer the reference's *Crosses a repo boundary* row when
+the manifest has more than one repo, since a repo's own skill cannot see the others.
 
 **Write every repo's note before the first `Edit` or `Write` in any of them**, so
 the contract is chosen rather than inherited from whatever the producer happened to
@@ -103,9 +103,9 @@ review weighs if a reviewer proposes the same thing.
 ## Step 2d — Hand the build to the build model
 
 Read the class from `<primary-repo>/.vicaris/risk-<branch>.txt` and spawn **one**
-sub-agent with `subagent_type: builder` to run Steps 3–6b across the whole
-manifest: `model: sonnet` at `mechanical`, `tiny` and `normal`, `model: opus` at
-`elevated` and `production`; the definition holds its effort at high. Do not build inline at any class — every build turn in
+sub-agent with `subagent_type: builder` (Sonnet 5.5, at every class) to run Steps
+3–6b across the whole manifest. The definition pins its model and holds its effort
+at high; pass no `model:`. Do not build inline at any class — every build turn in
 this context re-reads all of it. Never `fork`: a fork always runs on the parent's
 model.
 
@@ -118,15 +118,15 @@ every stage sub-agent, plus everything the build must not re-decide:
   the first slice, plus each repo's convention docs from Step 1;
 - every repo's `design-notes-<branch>.md` path, as amended by the challenge — the
   primary's opens with the Step 1 rules — with the rule that the note is the
-  design: where building shows it is wrong, amend the note and say why in the
-  report rather than drifting from it silently;
+  design: where building shows a decision is wrong, rewrite that section in place
+  and say why in the report (`design-note.md`, *Keeping it current*), rather than
+  drifting from it silently or appending a log of the build;
 - the test surface from `<primary-repo>/.vicaris/understanding-<branch>.md` and
   any prompt-change constraints from the sidecar.
 
 When it returns, read each repo's `verify-<branch>.txt` rather than trusting the
 summary, and re-read the design notes for amendments. A build that came back red or
-with an unexplained departure from its note is not handed to review: spawn a fresh
-`builder` on **opus** with the failure and the note, rather than repairing it here.
+with an unexplained departure from its note is not handed to review: spawn a fresh `builder-opus` with the failure and the note, rather than repairing it here.
 
 ## Step 3 — Build it, one slice at a time
 
@@ -218,9 +218,11 @@ the diff — not the file — and for each row name a *line* and what you did, o
 - Every `except` → the specific type and the caller that acts on it; log-and-continue
   is a hidden branch.
 
-A candidate that stays needs a rule-shaped reason, not "clearer this way". Append
-the note beneath that repo's design note in `.vicaris/design-notes-<branch>.md`,
-re-run the repo's verify, and only then hand off.
+A candidate that stays needs a rule-shaped reason, not "clearer this way". Add it
+as one line under `## Kept on purpose` in that repo's
+`.vicaris/design-notes-<branch>.md`, so review can weigh it; record nothing for the
+candidates you fixed or found absent. Re-run the repo's verify, and only then hand
+off.
 
 **Ping Slack as each repo finishes**, not once at the end, per
 `${CLAUDE_PLUGIN_ROOT}/references/notifications.md` — one line per repo, e.g.

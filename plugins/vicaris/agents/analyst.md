@@ -1,7 +1,7 @@
 ---
 name: analyst
-description: Runs the understand stage of a Vicaris run — acceptance criteria with rejected readings, risk class, repos in scope — on opus at medium effort, and reports back in a few lines.
-model: opus
+description: Runs the understand stage of a Vicaris run — acceptance criteria with rejected readings, risk class, repos in scope — on Opus 5.5 at medium effort, and reports back in a few lines.
+model: claude-opus-5-5
 effort: medium
 ---
 
