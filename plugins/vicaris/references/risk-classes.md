@@ -28,7 +28,7 @@ earns a regression test that fails without the fix.
 worth writing down. The default when nothing else fits; default up, not down.
 
 **`elevated`** — crosses a component or repo boundary, introduces a structural unit,
-or ticks any non-functional row in the understanding document. It earns the design
+or carries any tag from the understanding's "What the change could break" rows. It earns the design
 challenge.
 
 **`production`** — data can be destroyed, access can be widened, money can move, or
@@ -39,7 +39,7 @@ migration checks, plus a completion doc with a rollback plan.
 
 | Stage | mechanical | tiny | normal | elevated | production |
 |---|---|---|---|---|---|
-| Understand — full NFR table | short form | short form | ✓ | ✓ | ✓ |
+| Understand — every Step 3 row | short form | short form | ✓ | ✓ | ✓ |
 | Design note (`implement` 2b) | skip | skip | ✓ | ✓ | ✓ |
 | Design challenge | skip | skip | skip | ✓ | ✓ |
 | Build model (`implement` 3–6b, fix passes, `test`) | sonnet | sonnet | sonnet | opus | opus |
@@ -72,7 +72,7 @@ The review row becomes `review-changes` flags in `adversarial-review` Step 2.
 
 ## Classified twice, and only ever upward
 
-**Predicted**, by `understand`, from the story and its non-functional answers. It
+**Predicted**, by `understand`, from the story and its "what the change could break" answers. It
 gates the stages that run before there is a diff — the design note and the design
 challenge.
 

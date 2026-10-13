@@ -19,7 +19,7 @@ happens inside the stage that owns it, on opus.
 | Stage | Agent | Model · effort |
 |---|---|---|
 | Orchestrator | the main session | opus · medium |
-| `understand` | `lead` | opus · high |
+| `understand` | `analyst` | opus · medium |
 | Design and its challenge (`implement` Steps 1–2c) | `lead`, which spawns the blind designer and the comparer | opus · high; `blind-designer` fable · high; comparer `lead` |
 | Build (`implement` Steps 3–6b) | `builder` | the class's build model · high |
 | `adversarial-review`, deciding its findings | `lead`, which spawns reviewers and fix passes | opus · high |
@@ -35,8 +35,9 @@ and `normal`, opus at `elevated` and `production`. Pass it as `model:` when spaw
 **Effort lives in the agent definitions**, because the effort of a plain
 `general-purpose` spawn is undocumented. The orchestrator runs at medium: Opus 5.5 at
 medium beats Opus 5 at high, it thinks more per turn at any level than its
-predecessor, and most orchestrator calls sequence rather than judge. The stages
-that decide run at high, and so does the build, where high is Sonnet 5's
+predecessor, and most orchestrator calls sequence rather than judge. Understand runs at medium too: it reads and classifies more than it weighs
+alternatives, and Opus 5.5 at medium still beats Opus 5 at high. The stages
+that weigh designs and findings run at high, and so does the build, where high is Sonnet 5's
 recommended default.
 
 **Sub-agents can spawn sub-agents**, three levels below the main session by default

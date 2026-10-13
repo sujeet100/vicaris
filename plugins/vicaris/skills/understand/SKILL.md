@@ -14,12 +14,12 @@ sidecar's Slack target, else record Slack as unavailable in the degraded list.
 Establish what `$ARGUMENTS` has to be true of, and how much ceremony the rest of
 the run earns. Read and decide; do not design or edit code.
 
-**Model:** opus, high effort. Run directly on another model, delegate to an opus
-sub-agent.
+**Model:** opus, medium effort (the `analyst` agent). Run directly on another
+model, delegate to an `analyst` sub-agent.
 
 ## Step 1 — Load the bar
 
-Read `${CLAUDE_PLUGIN_ROOT}/references/` `autonomy.md`, `coding-principles.md`,
+Read `${CLAUDE_PLUGIN_ROOT}/references/` `autonomy.md`,
 `risk-classes.md`, `multi-repo.md` and `project-context.md` (if present), plus the
 project's `CLAUDE.md` and convention docs. This stage runs as a sub-agent, so read
 all of them; none is in your context yet.
@@ -45,22 +45,31 @@ Then, in their own short sections:
   empty states, limits, permissions, ordering, existing data, failure UX.
 - **Sources** — every page and code path used, or "none found".
 
-## Step 3 — Non-functional constraints
+## Step 3 — What the change could break
 
-Answer only the rows that apply, one line each; `n/a` plus reason is an answer,
-a blank is a finding.
+This step sets the risk class: every row answered yes carries its tag into Step 4
+and its check into Step 6. Answer **every** row in one line, either what is true for
+this change or `n/a` with the reason; a blank is a finding. State constraints on the
+design, never the design. At `mechanical` and `tiny`, the first row, the last two rows
+and any row that is not `n/a` are enough.
 
-| The change touches… | State |
-|---|---|
-| Persisted data or a schema | The migration, whether it reverses, and what happens to rows written by the old code during the deploy window |
-| An API or event another component consumes | Who consumes it today, and whether old and new can coexist for one release |
-| Authentication, authorisation or tenancy | The rule being changed, who gains access, and the test that proves nobody else did |
-| Money, billing or quantities | The unit, the rounding, and the idempotency of anything retryable |
-| Concurrency or shared state | The shared thing, and the interleaving that must not lose a write |
-| A new dependency | What it replaces, its size and licence, and what writing it ourselves would cost |
-| User-visible behaviour | Before and after, and whether anything existing breaks |
-| Performance on a hot path | The current cost, the expected cost, and how you would know if it regressed |
-| Anything with a blast radius | How this is turned off without a deploy |
+| Row | Answer | Yes carries |
+|---|---|---|
+| Effects that can't be undone | What switching it on writes, sends or moves that switching it off does not take back: downstream copies, messages, external calls, payments | `production`, plus `money` if it moves money |
+| Stored data | The migration, whether it reverses, the rows already there, and what rows written by the old code during the deploy window become | `schema` |
+| Who can see or do what | The permission or tenancy rule being changed, who gains access, and the test that proves nobody else did | `authz` |
+| Contracts | Every consumer of what changes, including a name or id another system uses as a key; whether old and new coexist for one release; the merge order | `public-contract` |
+| Shared state and retries | The shared thing and the interleaving that must not lose a write, and what happens when an operation runs twice | `concurrency` |
+| Config and environments | The environments it reaches, which one switches first, and what each needs in place before it does | `infra` |
+| New dependency | What it replaces, its size and licence, and what writing it ourselves would cost | `dependency` |
+| Existing users | Before and after, including stored state (saved searches, bookmarks, settings) that will now behave differently, and who else it reaches: other regions, tenants or clients | a test |
+| Hot path | The current cost, the expected cost, and the number that would show a regression | a test |
+| Turning it off | How it is turned off without a deploy, by default a runtime toggle that keeps the old path, and what must stay byte-identical while it is off | a parity test |
+| Knowing it broke | The log, metric or alert that would show it misbehaving in production, or that none exists | a test, or a gap |
+
+Then answer the rows `project-context.md` adds under *Understand: extra rows*, if
+present, the same way: risks only that domain has, such as money arithmetic or
+model behaviour, live there rather than here.
 
 ## Step 4 — Classify the risk, and write it down
 
@@ -76,7 +85,9 @@ why: <one line — the trigger that set it>
 EOF
 ```
 
-**Default upward** between two classes. **Say `mechanical` only when you can
+The tags are Step 3's: `schema`, `authz`, `money` or an effect that can't be
+undone make it `production`, and any other tag makes it at least `elevated`, as
+`scripts/vicaris-risk.sh` will on the diff. **Default upward** between two classes. **Say `mechanical` only when you can
 point at the instances the change copies** — it drops the craft pass.
 
 ## Step 5 — Repos in scope
@@ -97,7 +108,9 @@ reported, not reasoned about.
 ## Step 6 — The test surface
 
 Name the tests the change needs, one line each, **derived from the acceptance
-criteria and the Step 3 failure modes, not from a design**. Where a criterion
+criteria and the Step 3 failure modes, not from a design**. Concise but
+sufficient: the behaviour and the edges that matter, no test of the framework.
+Behaviour the change must preserve gets a parity test. Where a criterion
 cannot be tested, say why.
 
 ## Step 7 — Emit the understanding
@@ -106,7 +119,7 @@ Write `<primary-repo>/.vicaris/understanding-<branch>.md` (the hooks look
 there). Scratch — never committed or cited in a commit message.
 
 Sections, in this order: Goal · Acceptance criteria with rejected readings ·
-Contradictions · Gaps · Non-functional constraints · Risk class and why · Repos
+Contradictions · Gaps · What the change could break · Risk class and why · Repos
 in scope, contract, merge order · Test surface · Sources.
 
 **Do not list the files to change.** Keep it short: it feeds the run's opening

@@ -72,7 +72,7 @@ the notes.
 
 ## Step 1 — Understand
 
-Spawn `lead` (`subagent_type: lead`) running the `understand` skill on
+Spawn `analyst` (`subagent_type: analyst`) running the `understand` skill on
 `$ARGUMENTS`, so the story and linked pages stay out of this long-lived context. It
 writes `<primary>/.vicaris/understanding-<branch>.md` and
 `<primary>/.vicaris/risk-<branch>.txt`.

@@ -1,6 +1,6 @@
 ---
 name: lead
-description: Runs one judgement stage of a Vicaris run — understand, design and its challenge, review, or finalize — on opus at high effort, and reports back in a few lines.
+description: Runs one judgement stage of a Vicaris run — design and its challenge, review, or finalize — on opus at high effort, and reports back in a few lines.
 model: opus
 effort: high
 ---

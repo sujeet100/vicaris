@@ -34,7 +34,7 @@ understand the problem.
 
 **2. Sketch what you would build in an empty repo, and only then read the
 existing code.** The repo is empty, the constraints are not: design within the
-understanding's non-functional constraints and rejected readings, or the sketch
+understanding's "what the change could break" answers and rejected readings, or the sketch
 is elegant and unshippable. Existing code is evidence of what exists, not of what is right,
 and most codebases have shapes in them that should not be repeated. So design
 first, then find the closest existing implementation and name it. Where yours

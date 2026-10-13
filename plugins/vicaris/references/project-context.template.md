@@ -56,6 +56,17 @@ environment variable and let the shell resolve it at run time.
   ID in the plugin's settings.
 - The issue-tracker key format, so branch names and MR titles carry it.
 
+## Understand: extra rows
+
+Rows `understand` adds to its "What the change could break" table, for risks only
+this domain has. Same three columns: the row, what to answer, and the tag or check a
+yes carries. Leave the section out when the generic rows are enough. For example:
+
+| Row | Answer | Yes carries |
+|---|---|---|
+| Money and quantities | The unit, the rounding, and anything already agreed or scheduled whose outcome changes without anyone editing it | `money` |
+| Model behaviour | The prompt, tool description or structured output that changes, and the eval that shows nothing else moved | `prompt` |
+
 ## Prompt and eval conventions
 
 - Where prompts live and how they are stitched together, if the project ships
