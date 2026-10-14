@@ -116,8 +116,9 @@ survives both compaction and a fresh session.
 Judgement runs on **Opus 5.5**: understanding, design notes, the design
 comparison, review and the decision on every finding, including the MR review's.
 Everything that carries a decision out runs on **Sonnet 5.5** at every risk class:
-the build, every fix pass, the test stage, finalize and the runs of `review-changes`,
-which are plumbing around reviewers that pin their own models. That split holds
+the build, every fix pass, the test stage and finalize. The runs of
+`review-changes` are plumbing around reviewers that pin their own models, so they
+go to **Haiku 5.5**, at a twentieth of Sonnet's price. That split holds
 because a design change never forms inside the build: the builder files a decision
 request, an Opus lead decides it and rewrites the design note, and Sonnet builds to
 the amended note. The orchestrator also holds every wait (reviewers, fix passes,
@@ -171,7 +172,7 @@ Every stage is also a standalone skill, so you can run one on its own.
 |---|---|
 | **Skills** | `/vicaris` (the orchestrator), `/understand`, `/implement`, `/design-challenge`, `/adversarial-review`, `/test`, `/handover`, `/finalize` |
 | **References** | `autonomy` (the contract and standing resolutions) · `risk-classes` (what each class buys) · `gates` (what must be green, one fix pass per review) · `coding-principles` (the standard) · `delegation` (what runs in a sub-agent, on which model) · `design-note` (the eight questions asked before the first edit) · `multi-repo` (the manifest and per-repo invariants) · `notifications` (the Slack drumbeat) · `project-context.template` |
-| **Agents** | `analyst` (Opus 5.5, medium effort: understand) · `lead` (Opus 5.5, high effort: design and its challenge, review, deciding the MR review's findings) · `builder` (Sonnet 5.5, high effort: the build, one per repo, fix passes, test and finalize, at every class) · `review-runner` (Sonnet 5.5: runs `review-changes` for one repo, plumbing only) · `builder-opus` (Opus 5.5: repairs a stage that came back red) · `blind-designer` (Fable, read-only, no shell, so it cannot see the branch) · `acceptance-criteria` (Sonnet, read-only) |
+| **Agents** | `analyst` (Opus 5.5, medium effort: understand) · `lead` (Opus 5.5, high effort: design and its challenge, review, deciding the MR review's findings) · `builder` (Sonnet 5.5, high effort: the build, one per repo, fix passes, test and finalize, at every class) · `review-runner` (Haiku 5.5: runs `review-changes` for one repo, plumbing only) · `builder-opus` (Opus 5.5: repairs a stage that came back red) · `blind-designer` (Fable, read-only, no shell, so it cannot see the branch) · `acceptance-criteria` (Sonnet, read-only) |
 | **Scripts** | `vicaris-risk.sh` (observed class, raise-only) · `vicaris-gate.sh` (records each repo's verify) · `vicaris-parity.sh` (every instance of a pattern, touched or not) · `vicaris-status.sh` (per-repo coverage) · `vicaris-manifest.sh` (the manifest reader: each repo's base and role, and what "changed" means) · `vicaris-wait.sh` (the orchestrator's waits on pipelines, eval jobs and detached reviewers, one line per result) · `mr-review-root.sh` · `browser-login-helper.sh` (keychain login that keeps passwords out of the model's context) |
 | **Hooks** | `SessionStart` re-injects the run's state; `PreCompact` warns when the handover doc is older than the run's latest commit, artifact or edit |
 

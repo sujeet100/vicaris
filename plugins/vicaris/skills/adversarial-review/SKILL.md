@@ -29,7 +29,7 @@ context is the smallest in the run.
 | Part | Runs on | Steps |
 |---|---|---|
 | Set-up: stage, scope, pass directory | the orchestrator | 1 |
-| Reviewers, one `review-changes` per repo | `review-runner` (Sonnet 5.5; the passes it launches pin their own models) | 2 |
+| Reviewers, one `review-changes` per repo | `review-runner` (Haiku 5.5; the passes it launches pin their own models) | 2 |
 | The acceptance-criteria pass, and the seam where needed | `acceptance-criteria`; a `lead` for the seam | 2b, 3 |
 | Deciding: parity, synthesis, the ledger, the notes | one `lead` (Opus 5.5), spawned once every reviewer has reported | 2a, 4–6 |
 | The one fix pass | the orchestrator spawns it (`vicaris` Step 3) | — |

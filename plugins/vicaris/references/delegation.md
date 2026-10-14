@@ -22,7 +22,7 @@ happens inside the stage that owns it, on opus.
 | `understand` | `analyst` | Opus 5.5 · medium |
 | Design and its challenge (`implement` Steps 1–2c) | `lead`, which spawns the blind designer and the comparer | Opus 5.5 · high; `blind-designer` Fable 5.1 · high; comparer `lead` |
 | Build (`implement` Steps 3–6b) | `builder`, one per `change` repo, in dependency order | Sonnet 5.5 · high |
-| Review runs, one `review-changes` per repo | `review-runner`, spawned by the orchestrator | Sonnet 5.5 · medium; the passes it launches pin their own |
+| Review runs, one `review-changes` per repo | `review-runner`, spawned by the orchestrator | Haiku 5.5 · medium; the passes it launches pin their own |
 | Deciding the review's findings | `lead`, spawned by the orchestrator once every reviewer has reported | Opus 5.5 · high |
 | Fix pass (review, MR review) | `builder`, one per repo, spawned by the orchestrator | Sonnet 5.5 · high |
 | Fix pass (test) | `builder`, spawned by the test stage | Sonnet 5.5 · high |
@@ -42,12 +42,23 @@ a short `lead` answer it. `builder-opus` (Opus 5.5) only repairs a stage that ca
 back red or departed from its note. Pass no `model:` at the call: every
 definition pins a full model ID, and an alias passed at the call would override it.
 
+**Haiku runs plumbing, and nothing that decides or is read.** Haiku 5.5 costs a
+twentieth of Sonnet 5.5 ($0.10 and $0.50 per million against $2 and $10, up to a
+100K-token prompt), so it takes the one stage whose output is a file copied and a
+counts line: `review-runner`, which launches passes that pin their own models and
+runs a reducer. A stage that reads code to classify it stays on Sonnet, because
+Haiku at medium effort can report work done without checking it, and a criterion
+wrongly marked addressed is the miss the MR bot finds last. That keeps
+`acceptance-criteria` on Sonnet. Finalize's publish stays there too, since its MR
+descriptions and team announcement are read by people.
+
 **Models are pinned by full ID, never by alias.** The aliases mean different models
 on different providers: on the Anthropic API `sonnet` is Sonnet 5.5, but on Bedrock
 and Google Cloud it is Sonnet 4.5, and on Foundry `opus` is Opus 4.6. So every agent
-names `claude-opus-5-5`, `claude-sonnet-5-5` or `claude-fable-5-1`, and moving to a
-new generation is a deliberate edit to `agents/`, with the effort levels below
-re-checked, since each generation recalibrates them.
+names `claude-opus-5-5`, `claude-sonnet-5-5`, `claude-haiku-5-5` or
+`claude-fable-5-1`, and moving to a new generation is a deliberate edit to
+`agents/`, with the effort levels below re-checked, since each generation
+recalibrates them.
 
 **Effort lives in the agent definitions**, because the effort of a plain
 `general-purpose` spawn is undocumented. The orchestrator runs at medium: Opus 5.5
