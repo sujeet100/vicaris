@@ -53,7 +53,7 @@ migration checks, plus a completion doc with a rollback plan.
 | Acceptance-criteria pass | skip | skip | ✓ | ✓ | ✓ |
 | Browser / end-to-end | skip | if user-visible | if user-visible | ✓ | ✓ |
 | Migration rehearsal (up + down) | — | — | — | if schema | **required** |
-| Completion doc | five lines | short | ✓ | ✓ | ✓ + rollback plan |
+| Completion doc | what was threaded where, parity, verify | plus the decisions | ✓ | ✓ | ✓ + rollback plan |
 | MR + standalone MR review | ✓ | ✓ | ✓ | ✓ | ✓ |
 
 **Build model.** Judgement runs on Opus 5.5: understanding, design, the design
@@ -61,14 +61,15 @@ comparison, review and the decision on every finding. What reaches the build has
 already been decided there, in the design note, the rules and exemplars named before
 it, or the fix ledger, so Sonnet 5.5 carries it out at every class, and fix passes
 and `test` follow it. The split holds only if a decision never forms inside the
-build: where building or a finding shows a design decision is wrong, the decision
-goes back to an Opus stage, which rewrites the note in place (`design-note.md`,
-*Keeping it current*), and Sonnet then builds to the amended note. That covers the
+build: where building or a finding shows a design decision is wrong, or reaches a
+choice the note does not settle, the builder writes a decision request instead of
+choosing, a short Opus `lead` decides it and rewrites the note in place
+(`design-note.md`, *Keeping it current*), and Sonnet then builds to the amended note. That covers the
 case that once kept `elevated` and `production` builds on Opus, a cross-repo
 contract that firms up while the producer is written: the contract's shape is the
-design note's to decide, and a change to it is a design change. The saving is
-smaller than the list price suggests: Sonnet halves cache writes and output, while
-cache reads, most of a build's tokens, cost the same. Opus 5.5 builds only to repair
+design note's to decide, and a change to it is a design change. Sonnet 5.5 halves
+every rate, cache reads included ($0.10 per million against Opus's $0.20), so moving
+a stage to it roughly halves that stage's bill. Opus 5.5 builds only to repair
 a stage that came back red or departed from its note. Where each runs is in
 `delegation.md`.
 

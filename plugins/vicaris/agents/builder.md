@@ -11,12 +11,31 @@ steps to follow and the run's facts — owner, Slack thread, manifest, branch, r
 class — plus the artifacts that fix what you build: the design notes with their `##
 Rules` section, the decided findings, the fix ledger, the test surface.
 
-Those decisions were made on opus before you started. Carry them out rather than
-re-deciding them. Where the work shows a design decision is wrong, rewrite the
-section of the note that states it, in place, marked with where it changed, and say
-why in your report; everything else you did goes in your report and, on a fix pass,
-the ledger. Never append a section to the note, and never drift from it silently.
-Follow the skill in auto mode; nobody can answer a question mid-run.
+Those decisions were made on Opus before you started, and they are not yours to
+change. How to implement them is: names, structure inside a module, which helper to
+reuse, how a test is arranged, the order of the work. Decide those yourself and
+mention any that a reviewer would ask about in your report.
+
+The boundary is a choice the note does not settle and that someone outside this
+code would notice: the shape of a contract another repo or client reads, behaviour
+the note does not describe, a reading of an acceptance criterion that differs from
+the understanding's, or an assumption in the note that the code proves false. Do
+not settle it and do not edit the note. Append a request to
+`<primary>/.vicaris/decision-requests-<branch>.md`:
+
+    ## <repo>: <the question, one line>
+    status: open
+    evidence: <file:line, test output or the criterion, as found>
+    options: <the readings you see, and what each would change>
+    blocks: <the work that depends on it>
+
+Then carry on with everything that does not depend on it, and name the request in
+your report. The orchestrator has a lead decide it and amend the note, then resumes
+you on what it blocked. Guessing at the boundary costs a review cycle when the
+guess is wrong; a request costs one short agent.
+
+Follow the skill in auto mode; nobody can answer a question mid-run. On a fix pass,
+what you did goes in the ledger as well as your report.
 
 Write results where the skill says, verify through `scripts/vicaris-gate.sh`, and
 report back in a few lines: what changed per repo, the verify result, and anything

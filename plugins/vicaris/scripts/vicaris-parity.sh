@@ -26,17 +26,18 @@ repo="${1:-}"; pattern="${2:-}"; filter="${3:-}"
 [ -n "$repo" ] && [ -n "$pattern" ] || { echo "usage: vicaris-parity.sh <repo> <pattern> [path-filter]" >&2; exit 2; }
 [ -d "$repo" ] || { echo "not a directory: $repo" >&2; exit 2; }
 
-base=$(git -C "$repo" symbolic-ref --short refs/remotes/origin/HEAD 2>/dev/null \
-  || git -C "$repo" remote show origin 2>/dev/null | sed -n 's|.*HEAD branch: |origin/|p')
-[ -n "$base" ] || base=$(git -C "$repo" rev-parse --abbrev-ref HEAD@{upstream} 2>/dev/null) || base=""
-[ -n "$base" ] || { echo "no upstream base resolved for $repo — cannot tell touched from untouched" >&2; exit 2; }
+. "$(dirname "$0")/vicaris-manifest.sh"
+base=$(vm_base "$repo")
+[ -n "$base" ] || { echo "no base resolved for $repo — cannot tell touched from untouched" >&2; exit 2; }
 
-touched=$( { git -C "$repo" diff "$base"...HEAD --name-only; git -C "$repo" diff --name-only; } 2>/dev/null | sort -u )
+# Committed or not: a parity check run before finalize commits anything would
+# otherwise report every instance untouched, new files included.
+touched=$(vm_changed "$repo" "$base")
 
 if [ -n "$filter" ]; then
-  instances=$(git -C "$repo" grep -lE "$pattern" -- "$filter" 2>/dev/null | sort -u)
+  instances=$(git -C "$repo" grep --untracked -lE "$pattern" -- "$filter" 2>/dev/null | sort -u)
 else
-  instances=$(git -C "$repo" grep -lE "$pattern" 2>/dev/null | sort -u)
+  instances=$(git -C "$repo" grep --untracked -lE "$pattern" 2>/dev/null | sort -u)
 fi
 
 [ -n "$instances" ] || { echo "no file matches /$pattern/ in $(basename "$repo") — check the pattern before concluding the change is complete" >&2; exit 2; }

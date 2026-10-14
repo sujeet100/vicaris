@@ -118,15 +118,19 @@ every stage sub-agent, plus everything the build must not re-decide:
   the first slice, plus each repo's convention docs from Step 1;
 - every repo's `design-notes-<branch>.md` path, as amended by the challenge — the
   primary's opens with the Step 1 rules — with the rule that the note is the
-  design: where building shows a decision is wrong, rewrite that section in place
-  and say why in the report (`design-note.md`, *Keeping it current*), rather than
-  drifting from it silently or appending a log of the build;
+  design and the builder does not edit it: a choice the note does not settle, or a
+  decision the code proves wrong, goes to
+  `<primary-repo>/.vicaris/decision-requests-<branch>.md` (the builder agent's
+  definition has the boundary and the format) while the rest of the build goes on;
 - the test surface from `<primary-repo>/.vicaris/understanding-<branch>.md` and
   any prompt-change constraints from the sidecar.
 
-When it returns, read each repo's `verify-<branch>.txt` rather than trusting the
-summary, and re-read the design notes for amendments. A build that came back red or
-with an unexplained departure from its note is not handed to review: spawn a fresh `builder-opus` with the failure and the note, rather than repairing it here.
+When it returns, check each repo with `vicaris-gate.sh --check` rather than trusting
+the summary, and read the decision-requests file if the report names one: the
+orchestrator has a short `lead` answer each open request and amend the note, then
+resumes the builder on the work it blocked. A build that came back red or with an
+unexplained departure from its note is not handed to review: spawn a fresh
+`builder-opus` with the failure and the note, rather than repairing it here.
 
 ## Step 3 — Build it, one slice at a time
 
@@ -137,14 +141,18 @@ function by function, which optimises locally and loses the design.
 After each slice, run the self-check before starting the next:
 
 ```
-git diff            # the slice, not the whole change
+git diff            # the slice: earlier slices are staged, so this shows only this one
 ```
 
 List what it violates against the Step 1 rules and fix it now. An empty list is a
 real answer, reached by reading. Typical catches: a `continue`-shaped filter, a name
 with "and" in it, a docstring citing a renamed caller, a choice that falls out of
 emission order. This is not the review; its job is to not hand review the
-mechanical stuff.
+mechanical stuff. When the list is empty, stage the slice
+(`git -C "$repo" add -A`; `.vicaris/` is excluded locally) so the next slice's
+`git diff` shows only its own lines. Stage, never commit: finalize writes the
+commits. Staging also makes new files visible to the diffs review and the risk
+check take, which an untracked file is not.
 
 Hold `${CLAUDE_PLUGIN_ROOT}/references/coding-principles.md` and the Step 1 list —
 the `## Rules` section of the primary's design notes — live while writing (read the

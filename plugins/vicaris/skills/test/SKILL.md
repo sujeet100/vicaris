@@ -21,12 +21,14 @@ Step 0 loads them in its own session; a sub-agent has not seen them).
 whether a browser pass will run and why. Load the repo set per
 `references/multi-repo.md`.
 
-**Read each repo's `.vicaris/verify-<branch>.txt` rather than re-running its
-suite.** Re-run only a repo whose tree moved since (or whose file is missing or
-older than the last commit), through the same script:
+**Check each `change` repo's recorded verify rather than re-running its suite.**
+`--check` compares the recorded result's fingerprint with the tree as it stands, so
+it tells you whether a fix pass moved the code since; re-run only a repo it reports
+as failing or stale:
 
 ```bash
-bash "${CLAUDE_PLUGIN_ROOT}/scripts/vicaris-gate.sh" "$repo" "$VERIFY_CMD"
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/vicaris-gate.sh" --check "$repo" \
+  || bash "${CLAUDE_PLUGIN_ROOT}/scripts/vicaris-gate.sh" "$repo" "$VERIFY_CMD"
 ```
 
 With no verify command in the sidecar, use the project's standard unit tests.
@@ -88,6 +90,11 @@ message (`references/notifications.md`). Two variants:
 `<primary>/.vicaris/fix-ledger-<branch>.md` (`references/gates.md`); at the cap,
 carry it as outstanding into the completion doc and the MR.
 
-Fix in **the repo the fault lives in**; for a cross-repo failure, decide whether
-producer or consumer is wrong rather than patching the easier side. Re-run that
-repo's verify and the integrated path, and update the Slack thread.
+Fix in **the repo the fault lives in**. For a cross-repo failure, the design notes
+settle which side is wrong: the side that departs from the contract they describe is
+the one to fix, never the easier one to patch. Where the notes do not describe that
+part of the contract, or describe it in a way the failure shows is wrong, the side
+is a design decision: file a decision request
+(`<primary>/.vicaris/decision-requests-<branch>.md`, format in the builder agent's
+definition), carry on with the rest, and report it. Re-run that repo's gate and the
+integrated path, and update the Slack thread.

@@ -8,13 +8,16 @@
 # and nobody notices; a false positive here costs one review pass, a false negative
 # costs the review that would have caught it.
 #
-# Usage:  vicaris-risk.sh <manifest-or-repo> [predicted-class]
-#         Prints:  RISK: <class> · tags: <...>
+# Usage:  vicaris-risk.sh <manifest-or-repo> [predicted-class] [--write <risk-file>]
+#         Prints:  RISK: <class> · tags: <predicted and observed, together>
 #                  why:  <trigger>
+#                  observed: <class> · tags: <...>   (what the paths alone said)
 #         Exit 0  the prediction held
 #         Exit 3  the class was RAISED — say so in the thread and run what it earns
 #         Exit 4  could not observe (no base, or no changes) — prediction kept, and
 #                 the caller must not read that as a clean result
+#
+# Reads the manifest's per-repo base and looks only at repos whose role is change.
 
 set -uo pipefail
 
@@ -25,22 +28,30 @@ WRITE=""
 
 # --write makes the raise stick. Without it the new class lives only in this output,
 # and every later stage reads the file — so a forgotten rewrite silently restores the
-# ceremony the raise was meant to buy.
+# ceremony the raise was meant to buy. It also reads that file first, because the
+# understand stage wrote its prediction there: tags it saw in the story (a public
+# contract nobody's path names) are evidence too, and an observation that overwrote
+# them would be the script lowering what it knows.
 
-if [ -f "$TARGET" ]; then REPOS=$(cat "$TARGET"); else REPOS="$TARGET"; fi
+. "$(dirname "$0")/vicaris-manifest.sh"
 
+pred_tags=""; pred_why=""
+if [ -n "$WRITE" ] && [ -f "$WRITE" ]; then
+  pred_tags=$(sed -n '1s/.*tags: //p' "$WRITE" | tr ',' '\n' | tr -d ' ' | grep -vxE 'none|unknown' | grep -v '^$' || true)
+  pred_why=$(sed -n '2s/^why: //p' "$WRITE")
+fi
+
+# Only repos the run edits. A read-only repo is context, and counting it would
+# raise every story that reads a neighbour to elevated for breadth it does not have.
 changed=""
 observed_repos=0
-for repo in $REPOS; do
-  [ -d "$repo" ] || continue
-  base=$(git -C "$repo" symbolic-ref --short refs/remotes/origin/HEAD 2>/dev/null \
-    || git -C "$repo" remote show origin 2>/dev/null | sed -n 's|.*HEAD branch: |origin/|p')
-  [ -n "$base" ] || base=$(git -C "$repo" rev-parse --abbrev-ref HEAD@{upstream} 2>/dev/null) || base=""
-  [ -n "$base" ] || continue
+changed_repos=0
+while IFS=$'\t' read -r repo base role; do
+  [ -d "$repo" ] && [ "$base" != - ] || continue
+  files=$(vm_changed "$repo" "$base") || continue
   observed_repos=$((observed_repos + 1))
-  changed+=$'\n'$(git -C "$repo" diff "$base"...HEAD --name-only 2>/dev/null)
-  changed+=$'\n'$(git -C "$repo" diff --name-only 2>/dev/null)
-done
+  [ -n "$files" ] && { changed_repos=$((changed_repos + 1)); changed+=$'\n'"$files"; }
+done < <(vm_list "$TARGET" change)
 changed=$(printf '%s\n' "$changed" | grep -v '^$' | sort -u)
 
 # No resolvable base, or nothing changed anywhere, means the observation did not
@@ -49,11 +60,11 @@ changed=$(printf '%s\n' "$changed" | grep -v '^$' | sort -u)
 # the prediction and say the check could not run. Exit 4 distinguishes that from
 # a real result, because a caller must not read silence as reassurance.
 if [ "$observed_repos" -eq 0 ] || [ -z "$changed" ]; then
-  printf 'RISK: %s · tags: unknown\n' "$PREDICTED"
+  printf 'RISK: %s · tags: %s\n' "$PREDICTED" "$(printf '%s\n' "$pred_tags" | grep -v '^$' | paste -sd, - | sed 's/^$/unknown/')"
   if [ "$observed_repos" -eq 0 ]; then
-    printf 'why: no upstream base resolved in any repo — observed class unavailable, prediction kept\n'
+    printf 'why: no base resolved in any repo the run changes — observed class unavailable, prediction kept\n'
   else
-    printf 'why: no changed files against the base — observed class unavailable, prediction kept\n'
+    printf 'why: no changed files against the base, uncommitted work included — observed class unavailable, prediction kept\n'
   fi
   exit 4
 fi
@@ -71,7 +82,12 @@ tag_if() { printf '%s\n' "$changed" | grep -qiE "$1" && TAGS+=("$2"); }
 TAGS=()
 tag_if '(^|/)(migrations?|alembic|flyway|liquibase)/|\.sql$|(^|/)schema\.(rb|sql|prisma)$' schema
 tag_if '(^|/)(auth|authz|authn|permissions?|polic(y|ies)|rbac|roles?|sessions?|tokens?|credentials?|tenants?|tenancy)([/._-]|$)' authz
-tag_if '(payment|billing|invoice|pricing|price|charge|refund|currency|ledger|tax|money)'      money
+# money is two patterns: a lower-case segment (pricing/, refund_job.py, tax-rules.yaml)
+# and a CamelCase word (PricingService.kt). Unanchored, it tagged taxonomy, syntax and
+# every file with "price" in a variable name as money and sent the change to production.
+tag_if '(^|[/._-])(payments?|billing|invoices?|pricing|prices?|charges?|refunds?|currenc(y|ies)|ledgers?|tax(es)?|money)([/._-]|$)' money
+printf '%s\n' "$changed" | grep -qE '(^|[/._a-z-])(Payment|Billing|Invoice|Pricing|Price|Charge|Refund|Currenc|Ledger|Tax|Money)[A-Zsy./_-]' \
+  && { [[ " ${TAGS[*]:-} " == *" money "* ]] || TAGS+=(money); }
 tag_if '(^|/)(locks?|mutex|semaphores?|concurren[a-z]*|threadpool|celery|workers?|queues?)([/._-]|$)' concurrency
 tag_if '(Dockerfile|docker-compose|\.tf$|\.tfvars$|(^|/)(k8s|helm|charts?|deploy|infra)/|\.github/workflows/)' infra
 tag_if '(package(-lock)?\.json|pnpm-lock|yarn\.lock|pyproject\.toml|uv\.lock|poetry\.lock|requirements.*\.txt|go\.(mod|sum)|Cargo\.(toml|lock)|pom\.xml|build\.gradle)' dependency
@@ -91,29 +107,34 @@ for t in "${TAGS[@]:-}"; do
   esac
 done
 
-# Breadth is its own signal, independently of what was touched.
+# Breadth is its own signal, independently of what was touched. It counts repos
+# with changes, not repos in the manifest: a repo listed for reading adds no risk.
 files=$(printf '%s\n' "$changed" | grep -c . || true)
-repos=$(printf '%s\n' "$REPOS" | grep -c . || true)
-if [ "$repos" -gt 1 ] && [ "$(rank "$observed")" -lt 3 ]; then
-  observed=elevated; why="the change spans $repos repositories"
+if [ "$changed_repos" -gt 1 ] && [ "$(rank "$observed")" -lt 3 ]; then
+  observed=elevated; why="the change spans $changed_repos repositories"
 elif [ "$files" -gt 12 ] && [ "$(rank "$observed")" -lt 2 ]; then
   observed=normal; why="$files files changed"
 fi
+obs_tags=$( [ ${#TAGS[@]} -eq 0 ] && echo none || (IFS=,; echo "${TAGS[*]}") )
 
+# The class only ever rises, and the tags are the union: the prediction's tags stay
+# because the story can name a risk no path does, and the observed ones join them.
 final="$PREDICTED"; raised=0
 if [ "$(rank "$observed")" -gt "$(rank "$PREDICTED")" ]; then
   final="$observed"; raised=1
 else
-  why="predicted class kept; observed would have been $observed"
+  why="${pred_why:-predicted class kept}"
 fi
+all_tags=$( { printf '%s\n' "$pred_tags"; [ ${#TAGS[@]} -eq 0 ] || printf '%s\n' "${TAGS[@]}"; } \
+  | grep -v '^$' | awk '!seen[$0]++' | paste -sd, - )
 
-line1="RISK: $final · tags: $( [ ${#TAGS[@]} -eq 0 ] && echo none || (IFS=,; echo "${TAGS[*]}") )"
-printf '%s\n' "$line1"
-printf 'why: %s\n' "$why"
+line1="RISK: $final · tags: ${all_tags:-none}"
+line3="observed: $observed · tags: $obs_tags · $files file(s) in $changed_repos repo(s), uncommitted work included"
+printf '%s\nwhy: %s\n%s\n' "$line1" "$why" "$line3"
 
 if [ -n "$WRITE" ]; then
   mkdir -p "$(dirname "$WRITE")"
-  printf '%s\nwhy: %s\n' "$line1" "$why" > "$WRITE"
+  printf '%s\nwhy: %s\n%s\n' "$line1" "$why" "$line3" > "$WRITE"
   printf 'written: %s\n' "$WRITE"
 fi
 

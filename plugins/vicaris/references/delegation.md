@@ -22,18 +22,24 @@ happens inside the stage that owns it, on opus.
 | `understand` | `analyst` | Opus 5.5 · medium |
 | Design and its challenge (`implement` Steps 1–2c) | `lead`, which spawns the blind designer and the comparer | Opus 5.5 · high; `blind-designer` Fable 5.1 · high; comparer `lead` |
 | Build (`implement` Steps 3–6b) | `builder` | Sonnet 5.5 · high |
-| `adversarial-review`, deciding its findings | `lead`, which spawns reviewers and fix passes | Opus 5.5 · high |
-| Fix pass (review, test, MR review) | `builder`, one per repo, spawned by the stage that found it | Sonnet 5.5 · high |
+| Review runs, one `review-changes` per repo | `review-runner`, spawned by the orchestrator | Sonnet 5.5 · medium; the passes it launches pin their own |
+| Deciding the review's findings | `lead`, spawned by the orchestrator once every reviewer has reported | Opus 5.5 · high |
+| Fix pass (review, MR review) | `builder`, one per repo, spawned by the orchestrator | Sonnet 5.5 · high |
+| Fix pass (test) | `builder`, spawned by the test stage | Sonnet 5.5 · high |
 | Acceptance-criteria pass | `acceptance-criteria` | Sonnet 5.5 · high |
 | `test` | `builder` | Sonnet 5.5 · high |
 | Repair of a stage that came back red | `builder-opus` | Opus 5.5 · high |
-| `finalize` | `builder`, whose fix loop re-enters review | Sonnet 5.5 · high |
-| Deciding the MR review's findings (`finalize` Step 3) | a short `lead`, spawned by finalize | Opus 5.5 · high |
+| Answering a builder's decision request | a short `lead`, spawned by the orchestrator | Opus 5.5 · high |
+| `finalize` publish (Step 1) and wrap (Steps 4–7) | `builder`, one for each | Sonnet 5.5 · high |
+| Pipelines, evals and the MR reviewers (`finalize` Steps 2–3) | the orchestrator, through `vicaris-wait.sh` | — |
+| Deciding the MR review's findings (`finalize` Step 3) | a short `lead`, spawned by the orchestrator | Opus 5.5 · high |
 
 **Opus decides, Sonnet builds.** Every execution stage runs on `builder` (Sonnet
 5.5) at every risk class, because what it executes was decided on Opus
-(`risk-classes.md`, *Build model*). `builder-opus` (Opus 5.5) only repairs a stage
-that came back red or departed from its note. Pass no `model:` at the call: every
+(`risk-classes.md`, *Build model*). Where the build reaches a choice that was not
+decided, it files a decision request rather than deciding, and the orchestrator has
+a short `lead` answer it. `builder-opus` (Opus 5.5) only repairs a stage that came
+back red or departed from its note. Pass no `model:` at the call: every
 definition pins a full model ID, and an alias passed at the call would override it.
 
 **Models are pinned by full ID, never by alias.** The aliases mean different models
@@ -53,8 +59,8 @@ run at high, and so does the build, where high is Sonnet 5.5's default.
 
 **Sub-agents can spawn sub-agents**, three levels below the main session by default
 (Claude Code 2.1.219 and later; `CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH` raises it).
-The deepest chain in a run is `finalize` → the review it re-enters → that review's
-reviewers, which fits. On a Claude Code that cannot nest, run design, review and
+The deepest chain in a run is the orchestrator → a `review-runner` → the passes it
+launches, or design → the challenge's two agents, which fits. On a Claude Code that cannot nest, run design, review and
 finalize in the orchestrator instead, and say so in the degraded list.
 
 **Never `fork`.** A fork inherits the parent's model and its whole context, which is
@@ -77,11 +83,33 @@ filled in. Give it facts and paths, never content it can read itself:
 When it returns, check the files it was meant to write, not its report. A stage that
 came back red or with an unexplained departure goes to a fresh `builder-opus` with the failure, never to an inline repair in the orchestrator.
 
-## Waiting is not work
+## Waiting is not work, and it belongs to the orchestrator
 
-Never poll from the orchestrator. A check on a pipeline, an eval job or a slow
-command re-reads the whole context to learn "still running". Wait with one
-background loop instead — `Bash` with `run_in_background: true` running an `until`
-over the status command, or the Monitor tool — and act when it notifies. When
-reading the result needs judgement, such as an eval that moved, hand the job's
-output to a short `lead` rather than pulling it into the orchestrator.
+A wait costs whatever context resumes after it. An agent idle past the five-minute
+prompt cache rewrites its whole context on its next call: on one run the review
+lead did that three times at 260–290K tokens and the finalize lead twice at
+200–250K, about $9 of a $104 run spent on nothing happening. So no stage agent
+waits. Every spawn that is followed by a wait (reviewers, fix passes, pipelines, the
+MR reviewers) is made by the orchestrator, and each agent starts with its inputs on
+disk, does its part, and returns.
+
+That does not make the orchestrator's context the place for the work. What it gains
+from holding the waits is a spawn, a one-line wait result and a short report each,
+never a diff, a review or a log: those go to files, and a `lead` reads them.
+
+- **Waiting on agents:** spawn them in one message and in the foreground
+  (`run_in_background: false` where the Agent tool offers it), and act when they
+  return.
+- **Waiting on anything else:** `scripts/vicaris-wait.sh`, in the foreground. It
+  blocks up to nine minutes per call, polls without printing, and returns one line
+  per thing waited for; call it again on exit 124. `start` runs a slow command
+  detached, `files` waits for it, `pipeline` waits for GitLab pipelines or named
+  jobs.
+- **Never a background loop or Monitor for a run's waits.** Either ends the turn,
+  and the notification that resumes it starts a new turn on the session's own model,
+  not the orchestrator's pinned one.
+- **Never poll from a model.** Each check re-reads the context to learn "still
+  running"; the script's loop re-reads nothing.
+
+When reading a result needs judgement, such as an eval that moved, hand the file
+the script wrote to a short `lead` rather than pulling it into the orchestrator.

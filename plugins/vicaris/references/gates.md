@@ -16,11 +16,15 @@ Run, in this order, and stop at the first failure:
    bash "${CLAUDE_PLUGIN_ROOT}/scripts/vicaris-gate.sh" "$repo" "$VERIFY_CMD"
    ```
 
-   It writes `<repo>/.vicaris/verify-<branch>.txt` with a `RESULT:` first line,
-   which `test`, `handover` and `finalize` read instead of re-running a suite.
+   It writes `<repo>/.vicaris/verify-<branch>.txt` with a `RESULT:` first line and
+   the fingerprint of the tree it ran against. `vicaris-gate.sh --check "$repo"`
+   says whether that result is about the code as it stands, which is how `test`,
+   `handover` and `finalize` reuse it instead of re-running a suite, and how a pass
+   recorded before a fix pass edited the code shows up as stale.
 
 2. **Observed risk** — `scripts/vicaris-risk.sh` re-derives the class from the
-   paths actually touched and can raise it. See `references/risk-classes.md`.
+   paths actually touched, committed or not, in the manifest's `change` repos
+   against each one's own base, and can raise it. See `references/risk-classes.md`.
 
 3. **Migration rehearsal**, at `production` with a `schema` tag — apply, reverse,
    re-apply, against a scratch database per the sidecar. With no migration command
@@ -76,8 +80,10 @@ line that parked it rather than relitigated when a later reviewer raises it.
 <primary-repo>/.vicaris/fix-ledger-<branch>.md
 ```
 
-One section per pass, one line per finding: `repo · file:line · [source] · applied |
-declined — reason`. Seed it from `review-changes`'s `merged.json`, not the rendered
+One section per pass, one line per finding: `repo · file:line · [source] · apply |
+declined — reason`. The lead that decides writes `apply`; the builder that fixes it
+turns that into `applied`, or `not applied — why`. The orchestrator counts passes
+from these sections, never from memory. Seed it from `review-changes`'s `merged.json`, not the rendered
 report: the JSON carries each finding's id, severity and quotes, plus the `dropped`
 array of what the caps suppressed. Its readers are the next fix pass (so nothing is
 applied twice), the standalone MR reviewer's fix step (so old arguments are not

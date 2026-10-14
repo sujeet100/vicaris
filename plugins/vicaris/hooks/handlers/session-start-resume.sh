@@ -55,10 +55,12 @@ fi
   fi
 
   if [ -f "$manifest" ]; then
-    printf 'Repos in scope — every stage covers all of them. `scripts/vicaris-status.sh` checks this rather than you remembering it:\n'
+    printf 'Repos in scope — every stage covers each `change` repo and leaves `read` repos untouched. `scripts/vicaris-status.sh` checks this rather than you remembering it:\n'
+    # cut, not `IFS=$'\t' read`: tab is IFS whitespace and a blank base would collapse.
     while IFS= read -r line; do
-      [ -n "$line" ] && printf -- '- `%s`\n' "$line"
-    done < "$manifest"
+      path=$(printf '%s' "$line" | cut -f1); base=$(printf '%s' "$line" | cut -sf2); role=$(printf '%s' "$line" | cut -sf3)
+      [ -n "$path" ] && printf -- '- `%s` · %s · base %s\n' "$path" "${role:-change}" "${base:-remote default}"
+    done < <(grep -v '^#' "$manifest")
     printf '\n'
   fi
 

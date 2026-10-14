@@ -45,7 +45,12 @@ the session scratchpad. Dense and factual:
   in dependency order, each with its branch, whether it is branched yet, its verify
   result and its MR. List them explicitly even when the manifest exists.
 - **Stage** — where in understand → design → challenge → implement → review → test
-  → finalize things are, and **per repo** where they differ.
+  → finalize things are, and **per repo** where they differ. Inside review and
+  finalize, the step of the loop the orchestrator is on (reviewers running, deciding,
+  fix pass N, waiting on pipelines or MR reviewers), and any open decision request
+  in `<primary-repo>/.vicaris/decision-requests-<branch>.md`. A detached MR reviewer
+  started with `vicaris-wait.sh start` keeps running across a compaction: name its
+  output file so the resumed session waits for it instead of starting another.
 - **Done** — what's implemented and verified, with the verify result.
 - **In flight** — the exact next action, mid-edit files (repo-qualified), any
   partial state.

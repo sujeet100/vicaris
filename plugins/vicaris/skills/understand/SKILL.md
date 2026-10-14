@@ -93,14 +93,24 @@ point at the instances the change copies** — it drops the craft pass.
 ## Step 5 — Repos in scope
 
 List every repo the change reads from or touches, in **dependency order**,
-producer before consumer, each with its freshness (`current` /
-`behind, not synced because …`):
+producer before consumer, each with three things the manifest records:
+
+- its **role**: `change` if the change edits it, `read` if it is only read for
+  context. A repo whose code you read to understand a contract, but which the
+  change leaves alone, is `read`; listing it as `change` would branch it, review
+  an empty diff and count it toward the breadth that raises the risk class.
+- its **target branch**, the one its MR merges into: the story's, the sidecar's, or
+  the remote default when neither names one. Deployment and config repos often
+  target an environment branch (`us-qa`, `uat`) rather than `main`, and the base
+  decides every diff the run takes.
+- its freshness (`current` / `behind, not synced because …`):
 
 ```bash
 git fetch --prune origin && git status -sb   # look for "behind"
 ```
 
-This becomes the manifest; an omitted repo gets no branch, review or MR. Across
+This becomes the manifest (`multi-repo.md`); an omitted `change` repo gets no branch,
+review or MR. Across
 repos, name the **contract** — who owns it, what it carries — and whether the MRs
 can merge in any order, without designing it. A repo you cannot bring current is
 reported, not reasoned about.
@@ -118,9 +128,12 @@ cannot be tested, say why.
 Write `<primary-repo>/.vicaris/understanding-<branch>.md` (the hooks look
 there). Scratch — never committed or cited in a commit message.
 
-Sections, in this order: Goal · Acceptance criteria with rejected readings ·
+Sections, in this order: Goal · Acceptance criteria with rejected readings (each
+criterion quoted verbatim first, since the acceptance-criteria pass grades against
+that text and reads it here rather than fetching the story) ·
 Contradictions · Gaps · What the change could break · Risk class and why · Repos
 in scope, contract, merge order · Test surface · Sources.
 
-**Do not list the files to change.** Keep it short: it feeds the run's opening
-Slack message.
+**Do not list the files to change.** Each section carries what a later stage acts on:
+the criteria and the readings rejected, not a retelling of the story or of the code
+you read to reach them. The opening Slack message is drawn from it.

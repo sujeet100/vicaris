@@ -18,6 +18,26 @@ true of *the change* rather than one repo: the repo set, the acceptance criteria
 the seam between repos, and the single ranked list. Reviewers run on **opus** at
 high effort; nothing here asks the owner anything (`references/autonomy.md`).
 
+## Who runs what
+
+Review waits on its reviewers and then on its fix passes, so it is split where it
+waits, and the orchestrator holds every wait. An agent idle past the five-minute
+prompt cache pays to rewrite its whole context when it resumes, and the lead that
+used to run all of this did that at 260–290K tokens a time; the orchestrator's
+context is the smallest in the run.
+
+| Part | Runs on | Steps |
+|---|---|---|
+| Set-up: stage, scope, pass directory | the orchestrator | 1 |
+| Reviewers, one `review-changes` per repo | `review-runner` (Sonnet 5.5; the passes it launches pin their own models) | 2 |
+| The acceptance-criteria pass, and the seam where needed | `acceptance-criteria`; a `lead` for the seam | 2b, 3 |
+| Deciding: parity, synthesis, the ledger, the notes | one `lead` (Opus 5.5), spawned once every reviewer has reported | 2a, 4–6 |
+| Fix passes and the re-review | the orchestrator spawns them (`vicaris` Step 3) | — |
+
+Each pass of the loop writes under `<primary-repo>/.vicaris/review/pass-<N>/` (`N`
+is 1 for the review, 2 for the re-review), one file per reviewer, so the decider
+reads files rather than reports and a resumed session can see what ran.
+
 ## Step 1 — Establish the change, not the repo
 
 Load the manifest per `${CLAUDE_PLUGIN_ROOT}/references/multi-repo.md`
@@ -27,24 +47,29 @@ Step 0 loads them in its own session; a sub-agent has not seen them). Per repo, 
 changed-file list — `--stat`, not the patch:
 
 ```bash
-for repo in $REPOS; do
+VM="${CLAUDE_PLUGIN_ROOT}/scripts/vicaris-manifest.sh"
+bash "$VM" list "$MANIFEST" change | while IFS= read -r line; do
+  repo=$(printf '%s' "$line" | cut -f1); BASE=$(printf '%s' "$line" | cut -f2)
   git -C "$repo" fetch --prune origin
-  BASE=$(git -C "$repo" symbolic-ref --short refs/remotes/origin/HEAD 2>/dev/null \
-    || git -C "$repo" remote show origin | sed -n 's|.*HEAD branch: |origin/|p')
-  git -C "$repo" diff "$BASE"...HEAD --stat
-  git -C "$repo" log "$BASE"..HEAD --oneline
+  git -C "$repo" add -A                       # new files into the index; never commit
+  git -C "$repo" diff "$(git -C "$repo" merge-base "$BASE" HEAD)" --stat
 done
 ```
 
-The base is each repo's *remote* default, never the local branch; the three-dot
-form diffs from the merge-base. `$ARGUMENTS` may override `BASE`.
+The base is each repo's manifest base, the branch its MR targets, never the local
+branch and not necessarily the remote default. The diff runs from the merge-base to
+the working tree, because nothing is committed until finalize: `base...HEAD` would
+show an empty change. Staging first matters for the same reason, since every
+`--base` diff a reviewer takes skips untracked files, and a new module the build
+added would otherwise go unreviewed. `$ARGUMENTS` may override `BASE`. `read` repos
+are context for the reviewers, not a diff to review.
 
-**Do not read the diffs into this context** — every reviewer fetches its own.
-Extract the Jira key from the branch name (or `$ARGUMENTS`) and fetch the story and
-acceptance criteria; Step 3 needs them.
+**Do not read the diffs into this context** — every reviewer fetches its own. The
+acceptance criteria come from the understanding, which quotes them verbatim; Step 3
+reads them there, so nobody fetches the story again.
 
-Record which repos have commits. A manifest repo with none is fine; a repo with
-commits that no pass covers is a failure.
+Record which repos have changes. A `change` repo with none is fine; a repo with
+changes that no pass covers is a failure.
 
 ## Step 2 — Buy the passes the change earns
 
@@ -65,20 +90,28 @@ With no risk file, treat the change as `normal` and say so in the report.
   `--integration` force a pass on without disabling them.
 - **Every flag explicit, always.** Invoked bare, `review-changes` asks which passes
   to run and the unattended run stalls. `--yes` says nobody is watching.
-- **`--also-repo` is not optional with more than one repo.** It lets the mapper
-  grep callers across repos; without it each repo reviews clean while the seam is
-  broken.
-- **Run the repos in parallel** — one invocation per repo, in a single message;
-  each run writes to its own `mktemp -d` directory. Check that `review-changes`'
-  Step 2 creates one before parallelising; an older version on fixed `/tmp` paths
-  must run one at a time, or concurrent runs silently read each other's briefs.
+- **`--also-repo` is not optional with more than one repo,** where the installed
+  `review-changes` has it. It lets the mapper grep callers across repos; without it
+  each repo reviews clean while the seam is broken. Check before the first
+  invocation (`grep -c -- '--also-repo' "$(bash "${CLAUDE_PLUGIN_ROOT}/scripts/mr-review-root.sh")"/skills/review-changes/SKILL.md`):
+  a version without it (0.8.0 has none) ignores the flag silently, so drop it, and
+  run Step 2b's **integration reviewer** once over every repo for the seam alone.
+  Say which you did in the report.
+- **One `review-runner` per repo**, given the invocation, the repo, its base and
+  the pass directory. Run them in parallel only if `review-changes` writes to a
+  per-run directory: 0.8.0 uses fixed `/tmp/review-*` paths (`grep -c mktemp` on its
+  SKILL.md finds only the MAKER's), so its runs go one at a time, or concurrent runs
+  silently read each other's briefs. The acceptance-criteria agent and the seam
+  reviewer share nothing with it and go alongside the first runner.
 
 Passes run on `opus`, except that `--quick` downgrades craft to sonnet and caps the
 agents. Keep findings tagged with the repo name — the fix pass routes by that tag.
 
-**Keep the reducer's JSON, not only its prose.** Note each repo's `merged.json`
-path in its run directory: it carries every finding by id with severity, quotes and
-location, plus a `dropped` array of what the caps suppressed. The fix pass and
+**Keep the reducer's JSON, not only its prose.** The runner copies
+`/tmp/review-merged.json` and `/tmp/review-merged.txt` to
+`review/pass-<N>/<repo>.json` and `.txt` before the next run overwrites them: the
+JSON carries every finding by id with severity, quotes and location, plus a
+`dropped` array of what the caps suppressed. The fix pass and
 ledger need that structure, and the `dropped` list answers "was this considered"
 when the MR reviewer raises it again at finalize.
 
@@ -114,12 +147,12 @@ the `normal` invocation instead.
 
 ### Step 2b — Fallback when `review-changes` is unavailable
 
-Spawn three `lead` sub-agents (opus, high effort) in a single message, each getting instructions rather
-than content: the repo list with paths and resolved `BASE`, the changed-file stat,
+The orchestrator spawns three `lead` sub-agents (opus, high effort) in a single message, each writing to `review/pass-<N>/<role>.md` and getting instructions rather
+than content: the repo list with paths and manifest `BASE`, the changed-file stat,
 and the paths to `${CLAUDE_PLUGIN_ROOT}/references/coding-principles.md`,
 `references/multi-repo.md` and `project-context.md`. Each pulls its own diffs
-(`git -C "$repo" diff "$BASE"...HEAD` plus `git -C "$repo" diff` for uncommitted
-work) across **every** repo.
+(`git -C "$repo" diff "$(git -C "$repo" merge-base "$BASE" HEAD)"`, which covers
+committed, staged and unstaged work) across **every** `change` repo.
 
 - **Clean-code reviewer** — grade against `coding-principles.md` *and the repo's own convention
   docs* (whatever `project-context.md` names, or the coding and testing conventions under
@@ -141,8 +174,9 @@ delivers missing. Run the criteria review here instead, as **one** sub-agent ove
 the whole change with `subagent_type: acceptance-criteria` (shipped in `agents/`,
 pinned to Sonnet 5.5). With no definition, use `general-purpose` on `model: sonnet`.
 
-Give it the repo list with each base and the story with its criteria; it pulls the
-diffs itself. Point it at `<mr-review>/charter/stage_po.md` (resolve with
+Give it the repo list with each base, the understanding's path for the criteria,
+and `review/pass-<N>/acceptance.md` as the one file it writes; it pulls the diffs
+itself. Point it at `<mr-review>/charter/stage_po.md` (resolve with
 `bash "${CLAUDE_PLUGIN_ROOT}/scripts/mr-review-root.sh"`) rather than restating it.
 Without the charter, tell it to classify the change FULL or PARTIAL, map every
 criterion to addressed / partial / missing with evidence, treat scope creep and
@@ -167,7 +201,8 @@ the merge order.
 ## Step 5 — Synthesise (short, ranked, scannable)
 
 Merge, de-duplicate, and resolve contradictions, saying which reviewer you sided
-with and why. Write the review doc in the owner's preferred shape — scratch, don't
+with and why. Write the review doc to `<primary-repo>/.vicaris/review-<branch>.md`
+(the re-review updates it in place) in the owner's preferred shape — scratch, don't
 commit it:
 
 - **Repos reviewed** — each repo with its diffstat and which passes ran on it, so it is obvious
@@ -189,7 +224,7 @@ against the author's and say which held; a finding the note is silent on is wort
 a line. The design challenge doc weighs more: a reviewer reopening a divergence it
 decided has to beat a named consequence, not a preference. Say which it did.
 
-## Step 6 — Hand back the fix list
+## Step 6 — Decide, and leave the fix list on disk
 
 Ping Slack per `${CLAUDE_PLUGIN_ROOT}/references/notifications.md` when the review
 starts (over which repos) and when it lands (counts by severity plus the headline
@@ -202,18 +237,19 @@ not describe) and rewrite the section of that repo's note that states it, in pla
 it out, and a decision formed inside a fix pass is what a re-review then has to
 repair.
 
-Then hand the fix list to `builder` (Sonnet 5.5) — **one per repo per pass**, so no
-single agent carries the whole list through a growing context, each given that
-repo's decided findings with blockers and should-fixes first and the suggestions it
-decided to apply last, plus the ledger path
-(`${CLAUDE_PLUGIN_ROOT}/references/delegation.md`). A suggestion not worth a line of
-the builder's time goes under *Skip for now*, not into the list. Each builder
-applies its findings in its own repo, re-verifying that repo with
-`scripts/vicaris-gate.sh`, and re-running the contract tests if the seam moved.
-Findings are decided, not applied, with the two-pass cap and the ledger at
-`<primary>/.vicaris/fix-ledger-<branch>.md`, all per
-`${CLAUDE_PLUGIN_ROOT}/references/gates.md`. Stop early if a fix reverses one from
-the previous pass: that is oscillation, and it wants a human eye.
+Then write the fix list as this pass's section of the ledger at
+`<primary>/.vicaris/fix-ledger-<branch>.md` (`${CLAUDE_PLUGIN_ROOT}/references/gates.md`),
+grouped by repo, blockers and should-fixes first and the suggestions you decided to
+apply last, each line `apply` or `declined — reason`. A suggestion not worth a line
+of the builder's time goes under *Skip for now*, not into the list. On the
+re-review, answer a finding the first pass already decided with that pass's line
+instead of deciding it again, and name any fix that reverses one from the previous
+pass: that is oscillation, it stops the loop, and it wants a human eye.
+
+Do not spawn the builders. Report, per repo, how many findings are `apply`, and
+whether you saw oscillation. The orchestrator spawns one `builder` per repo with
+the ledger path, so no single agent carries the whole list through a growing
+context, and none of them waits on another.
 
 ## Deciding, not asking
 
@@ -222,7 +258,7 @@ the previous pass: that is oscillation, and it wants a human eye.
 | Situation | What you do |
 |---|---|
 | `review-changes` would ask which passes to run | Never let it. Pass the flags in Step 2 and `--yes` |
-| A repo in the manifest has no commits | Record it as having no changes and move on |
+| A `change` repo has no changes | Record it as having no changes and move on |
 | The branch has no Jira key | Take the brief from `$ARGUMENTS`; with neither, skip Step 3 and say so |
 | The story has no usable acceptance criteria | Skip the PO pass with the reason, rather than grading against a guess |
 | The `mr-review` plugin is missing | Step 2b, and name the fallback in the report |

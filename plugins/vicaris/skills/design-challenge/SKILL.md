@@ -64,13 +64,14 @@ and everything untracked, including `.vicaris/` (no design notes to find):
 PRIMARY=$(git rev-parse --show-toplevel)
 BRANCH=$(git rev-parse --abbrev-ref HEAD)
 MANIFEST="$PRIMARY/.vicaris/repos-$BRANCH.txt"
-REPOS=$( [ -f "$MANIFEST" ] && cat "$MANIFEST" || echo "$PRIMARY" )
+[ -f "$MANIFEST" ] || MANIFEST="$PRIMARY"
 
+# Every repo, read ones included, each at its own manifest base: the branch this
+# change will merge into is the code the blind design must start from.
 WORK=$(mktemp -d "${TMPDIR:-/tmp}/vicaris-blind-XXXXXX")
-for repo in $REPOS; do
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/vicaris-manifest.sh" list "$MANIFEST" | while IFS= read -r line; do
+  repo=$(printf '%s' "$line" | cut -f1); BASE=$(printf '%s' "$line" | cut -f2)
   name=$(basename "$repo")
-  BASE=$(git -C "$repo" symbolic-ref --short refs/remotes/origin/HEAD 2>/dev/null \
-    || git -C "$repo" remote show origin | sed -n 's|.*HEAD branch: |origin/|p')
   mkdir -p "$WORK/$name"
   git -C "$repo" archive "$BASE" | tar -x -C "$WORK/$name"
 done
@@ -107,7 +108,7 @@ With no definition available, use `general-purpose` on `model: fable` and add:
 
 > Where the brief leaves something open, record it as an assumption.
 
-Keep its output as written — the charter's seven-section sketch, 400–700 words.
+Keep its output as written — the charter's seven-section sketch.
 Do not summarise or correct it before Step 3; your disagreement is an input to the
 comparison, not a filter on it.
 
@@ -159,7 +160,8 @@ Nothing material is a real result; say it in one line.
 ## Step 5 — One artifact, one ping
 
 Write `<primary-repo>/.vicaris/design-challenge-<branch>.md` (scratch, never
-committed; `finalize` reads it for the assumptions section). Keep it short:
+committed; `finalize` reads it for the assumptions section). It carries the decisions
+and their outcome, not the reasoning that reached them, which stays in the notes:
 
 - **Ran / skipped** — which, and the trigger or the reason.
 - **The blind design** — its approach and root decisions in a few lines, plus

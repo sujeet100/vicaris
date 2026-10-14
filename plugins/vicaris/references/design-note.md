@@ -133,11 +133,17 @@ handover's *Environment* section.
 
 The note states the design as it now stands: `finalize` quotes it as the reasoning
 behind what shipped, and review uses it to settle a finding that proposes a rejected
-design. So a later stage that changes a decision (the build, a fix pass, an
-MR-review fix) rewrites the section that states it, in place, marked with where it
-changed (`changed in review, A4`). It never appends a section of its own. What a
+design. So when a decision changes, the section that states it is rewritten in place,
+marked with where it changed (`changed in review, A4`), and never appended to. What a
 stage did, its verify result and the findings it fixed go to its report and the fix
 ledger: one decision, written in one place.
+
+Who rewrites it follows who decides. The stages on Opus (design, the challenge,
+review's decisions, a `builder-opus` repair, a lead answering a decision request)
+amend the note themselves. The Sonnet builder does not: implementation choices are
+its own, but a choice the note does not settle, or a decision the code proves wrong,
+goes to `<primary>/.vicaris/decision-requests-<branch>.md` for a lead to decide and
+write here. That keeps a design decision with the model the run paid to make it.
 
 ## What a real answer looks like
 

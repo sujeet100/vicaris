@@ -24,7 +24,7 @@ handover_is_stale() {
             ! -name 'handover-*' ! -name '.precompact-*' 2>/dev/null | head -1)" ] && return 0
 
   # Uncommitted edits in every repo the run touches.
-  for repo in "$root" $( [ -f "$manifest" ] && cat "$manifest" ); do
+  for repo in "$root" $( [ -f "$manifest" ] && cut -f1 "$manifest" | grep -v '^#' ); do
     [ -d "$repo" ] || continue
     while IFS= read -r path; do
       [ -n "$path" ] && [ "$repo/$path" -nt "$doc" ] && return 0

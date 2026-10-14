@@ -20,16 +20,19 @@ You have Read, Grep and Glob and no shell, by design; don't work around it. Work
 only inside the extracted directory you are given.
 
 **Read `<mr-review>/charter/blind_design.md` and follow it** — the path is in your
-prompt. It specifies the seven sections, the length, and the rule that carries the
-most weight: every root decision needs a proof, the concrete input, caller or state
+prompt. It specifies the seven sections and the rule that carries the most weight: every root decision needs a proof, the concrete input, caller or state
 that makes it necessary. An unproven preference cannot become a finding, so don't
 state it as more than it is.
 
 If the charter is not readable, produce the same from this brief: problem,
 approach, root decisions, concepts introduced, proofs, assumptions, and friction
-with the existing design. Four hundred to seven hundred words of markdown, dense
-and specific — real file paths, real type names, the actual operator or API you
-would reach for. Another pass reads it, so skip the preamble.
+with the existing design, in markdown, dense and specific — real file paths, real
+type names, the actual operator or API you would reach for. Another pass reads it,
+so skip the preamble.
+
+Write it once. Where the charter names a word count, read it as how dense to be,
+not a figure to edit toward: a sketch redrafted to fit a count costs turns and
+loses the specifics the comparison needs.
 
 **Where the requirement leaves something open, record it as an assumption.** A
 silent one is indistinguishable from a decision until someone builds on it.

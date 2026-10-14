@@ -61,7 +61,8 @@ What comes back is **the Record**:
    ├─ adversarial-review craft, architect and integration passes per repo, plus
    │                     one acceptance-criteria pass over the whole change
    ├─ test               browser run of anything user-visible, logs and traces
-   └─ finalize           completion doc · MR per repo · MR review · wrap-up
+   └─ finalize           MR per repo · pipelines and MR review, waited on by the
+                         orchestrator · completion doc · wrap-up
 ```
 
 A handful of ideas carry the design, and each exists because the obvious version
@@ -90,8 +91,10 @@ third round of patches will not settle that.
 **Cross-repo is the normal case.** The repo set is pinned once, and from then on
 every stage covers all of it, in dependency order, with the contract between repos
 reviewed against its real callers. `scripts/vicaris-status.sh` fails the run if any
-repo has work without a verify result or an MR, so coverage is checked rather than
-remembered.
+repo has work without a current verify result or, at the end, an MR, so coverage is
+checked rather than remembered. Each repo carries its own base in the manifest,
+because a deployment repo cut from an environment branch and diffed against `main`
+reports someone else's commits as this change.
 
 **It never asks.** Forks are resolved from `references/autonomy.md`, the same file
 every stage reads, so a question answered once is answered the same way everywhere.
@@ -107,9 +110,13 @@ survives both compaction and a fresh session.
 Judgement runs on **Opus 5.5**: understanding, design notes, the design
 comparison, review and the decision on every finding, including the MR review's.
 Everything that carries a decision out runs on **Sonnet 5.5** at every risk class:
-the build, every fix pass, the test stage and finalize. That split holds because a
-design change never forms inside the build: it goes back to an Opus stage, which
-rewrites the design note, and Sonnet builds to the amended note. Opus builds only
+the build, every fix pass, the test stage, finalize and the runs of `review-changes`,
+which are plumbing around reviewers that pin their own models. That split holds
+because a design change never forms inside the build: the builder files a decision
+request, an Opus lead decides it and rewrites the design note, and Sonnet builds to
+the amended note. The orchestrator also holds every wait (reviewers, fix passes,
+pipelines, MR reviewers), since an agent idle past the five-minute prompt cache pays
+to rewrite its whole context, and the orchestrator's is the smallest in the run. Opus builds only
 to repair a stage that came back red. **Fable 5.1** runs only the blind designer,
 so the independent design comes from a different model than the notes it is
 checking. Every agent pins its model by full ID, because the aliases mean older
@@ -158,8 +165,8 @@ Every stage is also a standalone skill, so you can run one on its own.
 |---|---|
 | **Skills** | `/vicaris` (the orchestrator), `/understand`, `/implement`, `/design-challenge`, `/adversarial-review`, `/test`, `/handover`, `/finalize` |
 | **References** | `autonomy` (the contract and standing resolutions) · `risk-classes` (what each class buys) · `gates` (what must be green, the two-pass cap) · `coding-principles` (the standard) · `delegation` (what runs in a sub-agent, on which model) · `design-note` (the eight questions asked before the first edit) · `multi-repo` (the manifest and per-repo invariants) · `notifications` (the Slack drumbeat) · `project-context.template` |
-| **Agents** | `analyst` (Opus 5.5, medium effort: understand) · `lead` (Opus 5.5, high effort: design and its challenge, review, deciding the MR review's findings) · `builder` (Sonnet 5.5, high effort: build, fix passes, test and finalize, at every class) · `builder-opus` (Opus 5.5: repairs a stage that came back red) · `blind-designer` (Fable, read-only, no shell, so it cannot see the branch) · `acceptance-criteria` (Sonnet, read-only) |
-| **Scripts** | `vicaris-risk.sh` (observed class, raise-only) · `vicaris-gate.sh` (records each repo's verify) · `vicaris-parity.sh` (every instance of a pattern, touched or not) · `vicaris-status.sh` (per-repo coverage) · `mr-review-root.sh` · `browser-login-helper.sh` (keychain login that keeps passwords out of the model's context) |
+| **Agents** | `analyst` (Opus 5.5, medium effort: understand) · `lead` (Opus 5.5, high effort: design and its challenge, review, deciding the MR review's findings) · `builder` (Sonnet 5.5, high effort: build, fix passes, test and finalize, at every class) · `review-runner` (Sonnet 5.5: runs `review-changes` for one repo, plumbing only) · `builder-opus` (Opus 5.5: repairs a stage that came back red) · `blind-designer` (Fable, read-only, no shell, so it cannot see the branch) · `acceptance-criteria` (Sonnet, read-only) |
+| **Scripts** | `vicaris-risk.sh` (observed class, raise-only) · `vicaris-gate.sh` (records each repo's verify) · `vicaris-parity.sh` (every instance of a pattern, touched or not) · `vicaris-status.sh` (per-repo coverage) · `vicaris-manifest.sh` (the manifest reader: each repo's base and role, and what "changed" means) · `vicaris-wait.sh` (the orchestrator's waits on pipelines, eval jobs and detached reviewers, one line per result) · `mr-review-root.sh` · `browser-login-helper.sh` (keychain login that keeps passwords out of the model's context) |
 | **Hooks** | `SessionStart` re-injects the run's state; `PreCompact` warns when the handover doc is older than the run's latest commit, artifact or edit |
 
 ## The name

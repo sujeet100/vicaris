@@ -1,10 +1,11 @@
 # Multi-repo changes
 
 Cross-repo changes are the norm here. Every stage that acts on "the change" must act
-on **every repo in scope**: a stage that silently covers only the repo you started in
-leaves a change that looks finished while half of it has no review or no MR.
-`scripts/vicaris-status.sh` enforces this, exiting non-zero on a repo with commits
-and no verify result or no MR.
+on **every repo the run changes**: a stage that silently covers only the repo you
+started in leaves a change that looks finished while half of it has no review or no
+MR. `scripts/vicaris-status.sh` enforces this, exiting non-zero on a repo with work
+(commits or uncommitted changes) and no current verify result, and, with `--final`,
+no MR.
 
 ## The repo set is an artifact, not a memory
 
@@ -16,8 +17,31 @@ all read:
 <primary-repo>/.vicaris/repos-<branch>.txt
 ```
 
-One absolute repo path per line, in **dependency order** — producers before
-consumers. The first line is the primary repo.
+One repo per line, in **dependency order** (producers before consumers, the primary
+first), as three tab-separated fields:
+
+```
+/abs/path/inventory-ingestion-service	origin/main	change
+/abs/path/deployment	origin/us-qa	change
+/abs/path/shared-schemas	origin/main	read
+```
+
+- **Base** is the branch this repo's MR targets, which is also the one to cut from
+  and the one every diff is taken against. Defaults differ between repos and a
+  deployment repo often targets an environment branch, so it is recorded per repo
+  rather than resolved from `origin/HEAD`. Diffing a branch cut from `origin/us-qa`
+  against `origin/main` shows every us-qa commit main lacks as part of this change;
+  that is how a run once tagged another team's pricing and RBAC files as its own and
+  classed itself `production`. Blank means the remote default.
+- **Role** is `change` for a repo the run edits, and `read` for one it only reads for
+  context (a schema it consumes, a neighbour whose behaviour it relies on). A `read`
+  repo gets no branch, no design note, no review and no MR, does not count toward the
+  risk class's breadth, and must end the run untouched.
+
+A bare path on a line is still read as `<path>  <remote default>  change`.
+
+`scripts/vicaris-manifest.sh` is the one reader. Scripts source it, and a stage
+reading the set by hand uses it too, so nobody re-derives the base differently:
 
 ## Where a scratch doc lives: with the code it describes
 
@@ -55,21 +79,27 @@ Reading the set, in any stage:
 PRIMARY=$(git rev-parse --show-toplevel)
 BRANCH=$(git rev-parse --abbrev-ref HEAD)
 MANIFEST="$PRIMARY/.vicaris/repos-$BRANCH.txt"
-REPOS=$( [ -f "$MANIFEST" ] && cat "$MANIFEST" || echo "$PRIMARY" )
+VM="${CLAUDE_PLUGIN_ROOT}/scripts/vicaris-manifest.sh"
+bash "$VM" list "$MANIFEST" change     # path TAB base TAB role, change repos only
+bash "$VM" changed "$repo"             # every changed path, committed or not
 ```
+
+"Changed" means against the merge-base with the repo's base, including staged,
+unstaged and untracked files. Nothing commits until finalize, so a stage that reads
+only `base...HEAD` sees an empty change, and a new file is invisible to `git diff`
+until it is staged.
 
 **No manifest means single-repo** — the set is just the current repo. Running a stage
 standalone on a change you know spans repos, write the manifest first.
 
 ## Per-repo invariants
 
-Each repo is resolved against **its own** remote, since default branches differ:
+Each repo is resolved against **its own** remote and its manifest base:
 
 ```bash
 git -C "$repo" fetch --prune origin
-BASE=$(git -C "$repo" symbolic-ref --short refs/remotes/origin/HEAD 2>/dev/null \
-  || git -C "$repo" remote show origin | sed -n 's|.*HEAD branch: |origin/|p')
-git -C "$repo" status --porcelain     # must be empty
+BASE=$(bash "$VM" base "$repo")
+git -C "$repo" status --porcelain     # must be empty before branching
 ```
 
 - **Same branch name in every repo.** It makes the MR set recognisable as one change
@@ -77,8 +107,10 @@ git -C "$repo" status --porcelain     # must be empty
 - **Uncommitted work in any repo is untouchable** — never stash, reset, commit,
   move, or pull over it, and never ask the owner to clear it. Work in a **separate
   worktree** instead (below). It is not a blocker, and never a scope question.
-- A repo that turns out not to need changes stays in the set with a note; drop it
-  only once you're sure, and say so.
+- A `change` repo that turns out not to need changes stays in the set with a note;
+  drop it only once you're sure, and say so. A `read` repo that turns out to need an
+  edit is changed to `change` in the manifest, branched, and given a design note
+  before the edit, and the risk check re-run, since breadth just grew.
 
 ## A dirty repo is not a blocked repo — use a worktree
 
@@ -114,8 +146,8 @@ delivery that is *declared* partial is honest work.
 
 | Stage | Must cover every repo |
 |---|---|
-| `understand` | Read code from all of them; name the set + freshness, and set the risk class |
-| Step 1b | Fetch, clean-check and branch each one off its own base |
+| `understand` | Read code from all of them; name the set with each repo's role and target branch, and set the risk class |
+| Step 1b | Fetch every repo; clean-check and branch each `change` repo off its manifest base |
 | `implement` | A design note for **every** repo before the first edit in any; then edit in dependency order, running each repo's own verify through `vicaris-gate.sh` |
 | The gate | `vicaris-gate.sh` per repo, then `vicaris-risk.sh` over the set |
 | `design-challenge` | One blind design over the **whole** change and every repo's base; amends the notes it changes |
@@ -125,7 +157,9 @@ delivery that is *declared* partial is honest work.
 | `finalize` | One MR per repo, cross-linked; MR-review bot on every MR; fixes back through every repo |
 | `handover` | Record every repo, its branch, and its state |
 
-Run `scripts/vicaris-status.sh` before any stage claims to be done.
+The table means every `change` repo; `read` repos are inputs to understand, design
+and review, and nothing else. Run `scripts/vicaris-status.sh` before any stage claims
+to be done.
 
 ## Attribute everything to a repo
 
