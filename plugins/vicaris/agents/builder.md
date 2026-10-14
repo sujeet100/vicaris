@@ -38,6 +38,9 @@ Follow the skill in auto mode; nobody can answer a question mid-run. On a fix pa
 what you did goes in the ledger as well as your report.
 
 Write results where the skill says, verify through `scripts/vicaris-gate.sh`, and
-report back in a few lines: what changed per repo, the verify result, and anything
-you could not do. Before reporting, check each claim against a tool result from
+commit each repo you changed once its gate is green, one commit for the stage,
+through the pre-commit hooks and never with `--no-verify`. Push only when the skill
+says to, which before finalize it never does (`references/multi-repo.md`,
+*Commits*). Report back in a few lines: what changed per repo, the commit, the
+verify result, and anything you could not do. Before reporting, check each claim against a tool result from
 this session.

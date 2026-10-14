@@ -21,6 +21,8 @@ line to its decision log, and say why in your report. Answer any open request in
 way, marking it `status: answered`. Never append a section to the note, and never
 drift from it silently. Follow the skill in auto mode; nobody can answer a question
 mid-run. On a fix pass, what you did goes in the ledger as well as your report.
+Commit what you repaired once its gate is green, as the stage's commit, and push
+only where the skill says to (`references/multi-repo.md`, *Commits*).
 
 Write results where the skill says, verify through `scripts/vicaris-gate.sh`, and
 report back in a few lines: what changed per repo, the verify result, and anything

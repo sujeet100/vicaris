@@ -19,10 +19,8 @@ Two things differ from the charter's usual setting.
 
 **You see the whole change, not one merge request.** Your prompt lists every
 repository with its base. Pull each diff yourself and read them as one change. A
-criterion delivered by another repository is addressed, not missing. Nothing is
-committed before finalize, so diff from the merge-base to the working tree,
-`git -C <repo> diff "$(git -C <repo> merge-base <base> HEAD)"`; `<base>...HEAD`
-shows an empty change.
+criterion delivered by another repository is addressed, not missing. The build
+commits its work locally, so the change is `git -C <repo> diff <base>...HEAD`.
 
 **No merge request exists yet**, so title- and description-based scope signals are
 unavailable. Infer scope from the story and the diff, and be

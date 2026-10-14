@@ -40,23 +40,38 @@ gate; no reviewer has been spawned, so nothing is wasted.
 
 ## Loop caps
 
-Three loops can run: review → fix → re-verify, test → fix → re-test, and MR review →
-fix. Each is capped at **two fix passes**. The third is not run: findings still
-multiplying after two passes mean a design is being repaired, and patches will not
-settle that.
+Three loops can run, and each is capped where it stops buying information:
 
-**At the cap**, do all of this and then move on:
+| Loop | Fix passes | What checks the fix |
+|---|---|---|
+| Review → fix | **one** | the gate, then the MR review over the pushed change |
+| MR review → fix | **one** | the gate and the pipeline |
+| Test → fix → re-test | **two** | the re-test, which is evidence rather than opinion |
 
-- record the outstanding findings in `<primary>/.vicaris/fix-ledger-<branch>.md`,
-  each with the repo, the finding, and why it was not applied;
-- carry them into the completion doc and every affected MR description, under a
+**No review round runs over a review fix pass.** The MR review is already a second
+review, over the pushed state with the fix commits in it, under a reviewer built
+differently from the local one; a local re-review in between was the third round of
+four over the same change. On the run that settled this, the local re-review and the
+second fix pass it fed cost about a ninth of the run, and the defects it found were in
+code the corrected story later removed, while the bug that mattered came from the MR
+review. What a fix can break that a test or type check can see, the gate still catches
+before anything is pushed. Fix commits are kept separate (`multi-repo.md`, *Commits*),
+so the MR decider can tell a finding in fix-pass code from one in the build, and the
+ledger records which it was. If findings in fix-pass code keep turning up, that is the
+evidence for adding a review of the fix commits back.
+
+**After the last pass**, do all of this and then move on:
+
+- record what is still open in `<primary>/.vicaris/fix-ledger-<branch>.md`, each
+  with the repo, the finding, and why it was not applied;
+- carry it into the completion doc and every affected MR description, under a
   heading a reviewer will see;
-- ping the Slack thread saying the loop was capped and with what outstanding;
-- continue to the next stage. A capped loop never ends the run.
+- ping the Slack thread saying what is outstanding;
+- continue to the next stage. An outstanding finding never ends the run.
 
-**Stop before the cap** when a fix reverses a fix from an earlier pass. That is
-oscillation. Keep the earlier version, record both positions in the ledger, and
-raise it as the one thing in the change that needs a human eye.
+**Oscillation** is a fix that reverses an earlier one, typically an MR-review finding
+that undoes a local review's fix. Keep the earlier version, record both positions in
+the ledger, and raise it as the one thing in the change that needs a human eye.
 
 ## Findings are decided, not applied
 
@@ -80,12 +95,18 @@ line that parked it rather than relitigated when a later reviewer raises it.
 <primary-repo>/.vicaris/fix-ledger-<branch>.md
 ```
 
-One section per pass, one line per finding: `repo · file:line · [source] · apply |
-declined — reason`. The lead that decides writes `apply`; the builder that fixes it
-turns that into `applied`, or `not applied — why`. The orchestrator counts passes
-from these sections, never from memory. Seed it from `review-changes`'s `merged.json`, not the rendered
+One section per pass, headed `## <loop> pass <N>`, where the loop is `review`, `test`
+or `mr-review`; one line per finding: `repo · file:line · [source] · apply | declined —
+reason`. The lead that decides writes `apply`; the builder that fixes it turns that
+into `applied` with the test that proves it, or `not applied — why`, on the same line
+and never as a paragraph: the ledger is read by the next decider and by the owner,
+and the reasoning already lives in the design note or the review doc. A builder that
+commits a pass adds `<repo> commit: <sha>` under that pass's heading, which is how
+the MR decider finds the fix commits after a compaction. The MR decider
+adds `· fix-pass code` to a finding whose lines a review fix commit wrote. The
+orchestrator counts passes from these headings, never from memory. Seed the review section from `review-changes`'s `merged.json`, not the rendered
 report: the JSON carries each finding's id, severity and quotes, plus the `dropped`
-array of what the caps suppressed. Its readers are the next fix pass (so nothing is
-applied twice), the standalone MR reviewer's fix step (so old arguments are not
-reopened), and a resumed session, which otherwise cannot tell pass one from pass
-three — a cap a compaction can reset is not a cap.
+array of what the caps suppressed. Its readers are the fix pass (so nothing is
+applied twice), the MR review's decider (so old arguments are not reopened), and a
+resumed session, which otherwise cannot tell a pass that ran from one that did not —
+a cap a compaction can reset is not a cap.

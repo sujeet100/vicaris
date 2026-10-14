@@ -86,9 +86,9 @@ message (`references/notifications.md`). Two variants:
 
 ## Step 8 — Fix and re-test
 
-**Capped at two passes**, each outcome in
-`<primary>/.vicaris/fix-ledger-<branch>.md` (`references/gates.md`); at the cap,
-carry it as outstanding into the completion doc and the MR.
+**Capped at two passes**, each outcome under `## test pass <N>` in
+`<primary>/.vicaris/fix-ledger-<branch>.md` (`references/gates.md`); after the
+second, carry what still fails as outstanding into the completion doc and the MR.
 
 Fix in **the repo the fault lives in**. For a cross-repo failure, the design notes
 settle which side is wrong: the side that departs from the contract they describe is
@@ -97,4 +97,5 @@ part of the contract, or describe it in a way the failure shows is wrong, the si
 is a design decision: file a decision request
 (`<primary>/.vicaris/decision-requests-<branch>.md`, format in the builder agent's
 definition), carry on with the rest, and report it. Re-run that repo's gate and the
-integrated path, and update the Slack thread.
+integrated path, commit the fix in its repo as this pass's commit
+(`references/multi-repo.md`, *Commits*), and update the Slack thread.

@@ -84,13 +84,41 @@ bash "$VM" list "$MANIFEST" change     # path TAB base TAB role, change repos on
 bash "$VM" changed "$repo"             # every changed path, committed or not
 ```
 
-"Changed" means against the merge-base with the repo's base, including staged,
-unstaged and untracked files. Nothing commits until finalize, so a stage that reads
-only `base...HEAD` sees an empty change, and a new file is invisible to `git diff`
-until it is staged.
+"Changed" means against the merge-base with the repo's base: the branch's commits,
+plus anything staged, unstaged or untracked, so a stage that stopped before its
+commit is still seen.
 
 **No manifest means single-repo** — the set is just the current repo. Running a stage
 standalone on a change you know spans repos, write the manifest first.
+
+## Commits: local, at every stage boundary, pushed at finalize
+
+Each stage that changes code commits it in each repo it changed, on the run branch,
+when its gate is green: the build once per repo, each fix pass once per repo. Nothing
+is pushed before finalize publishes the MRs. The commit is the stage's handoff, so a
+diff of the change is `base...HEAD`, what a fix pass did is its own commit, and a
+resumed session finds the work in the history rather than in a working tree that
+nothing protects.
+
+```bash
+git -C "$repo" add -A                    # .vicaris/ is excluded locally
+git -C "$repo" commit -m "$KEY <what this stage did, in the repo's commit style>"
+```
+
+- **Through the pre-commit hooks, never `--no-verify`.** Where a hook re-runs what the
+  gate just ran, that is wall-clock, not tokens. A hook that rewrites files (a
+  formatter) leaves them unstaged: stage, commit again, and re-run the gate, since
+  the tree moved.
+- **One commit per stage per repo**, message in the repo's own style with the Jira
+  key. Finalize keeps them: the MR then shows the build and each fix pass apart,
+  which is what lets the MR review's decider see which findings sit in fix-pass code.
+  A project that wants one commit squashes on merge.
+- **Never amend or rebase a pushed commit.** After finalize publishes, a fix is a new
+  commit on top.
+- **The owner's work is still untouchable.** This commits the run's branch in the
+  run's checkout (a worktree when the repo was dirty), never the owner's work.
+- The verify fingerprint is the tree's content, so committing the verified tree
+  leaves the gate's result current.
 
 ## Per-repo invariants
 
@@ -148,12 +176,12 @@ delivery that is *declared* partial is honest work.
 |---|---|
 | `understand` | Read code from all of them; name the set with each repo's role and target branch, and set the risk class |
 | Step 1b | Fetch every repo; clean-check and branch each `change` repo off its manifest base |
-| `implement` | A design note for **every** repo before the first edit in any; then edit in dependency order, running each repo's own verify through `vicaris-gate.sh` |
+| `implement` | A design note for **every** repo before the first edit in any; then one builder per repo, in dependency order, each running its repo's verify through `vicaris-gate.sh` and committing |
 | The gate | `vicaris-gate.sh` per repo, then `vicaris-risk.sh` over the set |
 | `design-challenge` | One blind design over the **whole** change and every repo's base; amends the notes it changes |
 | `adversarial-review` | Diff **every** repo; reviewers see the union, plus the cross-repo contract |
 | `test` | Unit-verify each repo; exercise the integrated behaviour once, end-to-end |
-| Fix passes | Apply findings in whichever repo they landed in, then re-verify that repo |
+| Fix passes | Apply findings in whichever repo they landed in, re-verify that repo, and commit there |
 | `finalize` | One MR per repo, cross-linked; MR-review bot on every MR; fixes back through every repo |
 | `handover` | Record every repo, its branch, and its state |
 

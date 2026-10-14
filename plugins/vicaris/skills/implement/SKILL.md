@@ -56,8 +56,9 @@ Load the manifest (`<primary-repo>/.vicaris/repos-<branch>.txt`; none means just
 the current repo) per `${CLAUDE_PLUGIN_ROOT}/references/multi-repo.md`, and confirm
 each repo is on the task branch before editing it; if one isn't, branch it off
 its own remote default per `multi-repo.md`. Work **in dependency order**,
-producer before consumer, with `git -C "$repo"` rather than `cd`. Do not commit or
-push unless asked.
+producer before consumer, with `git -C "$repo"` rather than `cd`. Commit each repo's
+work locally when its gate is green, and push nothing before finalize
+(`${CLAUDE_PLUGIN_ROOT}/references/multi-repo.md`, *Commits*).
 
 ## Step 2b — Design the change before the first edit
 
@@ -102,18 +103,25 @@ review weighs if a reviewer proposes the same thing.
 
 ## Step 2d — Hand the build to the build model
 
-Read the class from `<primary-repo>/.vicaris/risk-<branch>.txt` and spawn **one**
-sub-agent with `subagent_type: builder` (Sonnet 5.5, at every class) to run Steps
-3–6b across the whole manifest. The definition pins its model and holds its effort
-at high; pass no `model:`. Do not build inline at any class — every build turn in
-this context re-reads all of it. Never `fork`: a fork always runs on the parent's
-model.
+Read the class from `<primary-repo>/.vicaris/risk-<branch>.txt` and spawn **one
+`builder` per `change` repo** (Sonnet 5.5, at every class) to run Steps 3–6b in that
+repo, **in dependency order**: the producer's builder returns and its commit exists
+before the consumer's starts. Repos the understanding says share no contract can go
+in one message. The definition pins its model and holds its effort at high; pass no
+`model:`. Do not build inline at any class — every build turn in this context
+re-reads all of it. Never `fork`: a fork always runs on the parent's model.
 
-Its prompt carries what `${CLAUDE_PLUGIN_ROOT}/references/delegation.md` lists for
+One builder per repo, because an agent's cost grows with everything it has already
+read: a single builder carrying three repos re-read about 210K tokens on each of
+its 125 calls, most of it about repos it had finished with. The split is safe
+because the contract is already decided in the design notes; the builder does not
+need a memory of the other side, only its note and its commit.
+
+Each prompt carries what `${CLAUDE_PLUGIN_ROOT}/references/delegation.md` lists for
 every stage sub-agent, plus everything the build must not re-decide:
 
-- the instruction to follow Steps 3–6b, including the per-repo Slack pings and the
-  gate script in Step 6;
+- the instruction to follow Steps 3–6b **in its one repo**, including the Slack ping
+  and the gate script in Step 6, and to commit when the gate is green;
 - the path `${CLAUDE_PLUGIN_ROOT}/references/coding-principles.md`, to read before
   the first slice, plus each repo's convention docs from Step 1;
 - every repo's `design-notes-<branch>.md` path, as amended by the challenge — the
@@ -123,10 +131,15 @@ every stage sub-agent, plus everything the build must not re-decide:
   `<primary-repo>/.vicaris/decision-requests-<branch>.md` (the builder agent's
   definition has the boundary and the format) while the rest of the build goes on;
 - the test surface from `<primary-repo>/.vicaris/understanding-<branch>.md` and
-  any prompt-change constraints from the sidecar.
+  any prompt-change constraints from the sidecar;
+- for a consumer, each producer repo's path and build commit, so it reads the
+  contract as built (`git -C <producer> show <commit>`) and writes its side of the
+  contract test against it. A producer side that departs from its note is a
+  decision request, not something the consumer works around.
 
-When it returns, check each repo with `vicaris-gate.sh --check` rather than trusting
-the summary, and read the decision-requests file if the report names one: the
+When each returns, check its repo with `vicaris-gate.sh --check` and that its work is
+committed (`git -C "$repo" status --porcelain` empty) rather than trusting the
+summary, and read the decision-requests file if the report names one: the
 orchestrator has a short `lead` answer each open request and amend the note, then
 resumes the builder on the work it blocked. A build that came back red or with an
 unexplained departure from its note is not handed to review: spawn a fresh
@@ -150,9 +163,8 @@ with "and" in it, a docstring citing a renamed caller, a choice that falls out o
 emission order. This is not the review; its job is to not hand review the
 mechanical stuff. When the list is empty, stage the slice
 (`git -C "$repo" add -A`; `.vicaris/` is excluded locally) so the next slice's
-`git diff` shows only its own lines. Stage, never commit: finalize writes the
-commits. Staging also makes new files visible to the diffs review and the risk
-check take, which an untracked file is not.
+`git diff` shows only its own lines. Stage between slices and commit once, at the
+end of Step 6b, so the pre-commit hooks run once per repo rather than per slice.
 
 Hold `${CLAUDE_PLUGIN_ROOT}/references/coding-principles.md` and the Step 1 list —
 the `## Rules` section of the primary's design notes — live while writing (read the
@@ -195,7 +207,7 @@ Where the change spans a contract between repos, add the test that pins it on
 **both** sides — the producer's output shape and the consumer's handling — since
 neither repo's own suite sees the seam.
 
-Report per repo: what changed, tests added, verify result.
+Report: what changed, tests added, verify result.
 
 ## Step 6b — Simplify what you just wrote
 
@@ -229,12 +241,14 @@ the diff — not the file — and for each row name a *line* and what you did, o
 A candidate that stays needs a rule-shaped reason, not "clearer this way". Add it
 as one line under `## Kept on purpose` in that repo's
 `.vicaris/design-notes-<branch>.md`, so review can weigh it; record nothing for the
-candidates you fixed or found absent. Re-run the repo's verify, and only then hand
+candidates you fixed or found absent. Re-run the repo's verify, then commit the
+repo's work (`multi-repo.md`, *Commits*) and report the commit, and only then hand
 off.
 
-**Ping Slack as each repo finishes**, not once at the end, per
-`${CLAUDE_PLUGIN_ROOT}/references/notifications.md` — one line per repo, e.g.
-`service-api (1/2) done — filter aggregation, 41 tests green`. If one repo will
-take a while, say so when you start it.
+**Ping Slack when the repo is done**, per
+`${CLAUDE_PLUGIN_ROOT}/references/notifications.md` — one line, e.g.
+`service-api (1/2) done — filter aggregation, 41 tests green`. If it will take a
+while, say so when you start.
 
-Then hand off to the adversarial review stage, which reviews the whole set.
+Then hand off to the adversarial review stage, which reviews the whole set once
+every repo's builder has committed.

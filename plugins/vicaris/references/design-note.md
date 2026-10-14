@@ -134,9 +134,10 @@ handover's *Environment* section.
 The note states the design as it now stands: `finalize` quotes it as the reasoning
 behind what shipped, and review uses it to settle a finding that proposes a rejected
 design. So when a decision changes, the section that states it is rewritten in place,
-marked with where it changed (`changed in review, A4`), and never appended to. What a
-stage did, its verify result and the findings it fixed go to its report and the fix
-ledger: one decision, written in one place.
+marked with where it changed (`changed in review, A4`), and never appended to, so the
+note stays the size of the design rather than growing with the run. What a stage did,
+its verify result and the findings it fixed go to its report and the fix ledger: one
+decision, written in one place.
 
 Who rewrites it follows who decides. The stages on Opus (design, the challenge,
 review's decisions, a `builder-opus` repair, a lead answering a decision request)

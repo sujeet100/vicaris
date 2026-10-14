@@ -21,7 +21,7 @@ happens inside the stage that owns it, on opus.
 | Orchestrator | the main session, set by the `vicaris` skill | Opus 5.5 · medium |
 | `understand` | `analyst` | Opus 5.5 · medium |
 | Design and its challenge (`implement` Steps 1–2c) | `lead`, which spawns the blind designer and the comparer | Opus 5.5 · high; `blind-designer` Fable 5.1 · high; comparer `lead` |
-| Build (`implement` Steps 3–6b) | `builder` | Sonnet 5.5 · high |
+| Build (`implement` Steps 3–6b) | `builder`, one per `change` repo, in dependency order | Sonnet 5.5 · high |
 | Review runs, one `review-changes` per repo | `review-runner`, spawned by the orchestrator | Sonnet 5.5 · medium; the passes it launches pin their own |
 | Deciding the review's findings | `lead`, spawned by the orchestrator once every reviewer has reported | Opus 5.5 · high |
 | Fix pass (review, MR review) | `builder`, one per repo, spawned by the orchestrator | Sonnet 5.5 · high |
@@ -89,7 +89,7 @@ A wait costs whatever context resumes after it. An agent idle past the five-minu
 prompt cache rewrites its whole context on its next call: on one run the review
 lead did that three times at 260–290K tokens and the finalize lead twice at
 200–250K, about $9 of a $104 run spent on nothing happening. So no stage agent
-waits. Every spawn that is followed by a wait (reviewers, fix passes, pipelines, the
+waits. Every spawn that is followed by a wait (reviewers, the fix pass, pipelines, the
 MR reviewers) is made by the orchestrator, and each agent starts with its inputs on
 disk, does its part, and returns.
 

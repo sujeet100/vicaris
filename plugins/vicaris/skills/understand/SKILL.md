@@ -136,4 +136,7 @@ in scope, contract, merge order · Test surface · Sources.
 
 **Do not list the files to change.** Each section carries what a later stage acts on:
 the criteria and the readings rejected, not a retelling of the story or of the code
-you read to reach them. The opening Slack message is drawn from it.
+you read to reach them. A rejected reading is one line, the reading and what loses
+it; a break-table answer is one line, the thing that breaks and why. Every later
+stage and the owner read this file, so length here is paid many times over. The
+opening Slack message is drawn from it.

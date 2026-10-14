@@ -8,9 +8,9 @@
 # repo has work but no verify result, a verify result about older code, or (at the
 # end) no MR.
 #
-# Work means commits or uncommitted changes, untracked files included. Nothing
-# commits until finalize, so a table that counted only commits reported every
-# repo as "no changes — fine" right up to the moment it mattered.
+# Work means commits or uncommitted changes, untracked files included. Each stage
+# commits as it ends, so uncommitted work between stages is a stage that stopped
+# short; it is noted here, and with --final it is a gap.
 #
 # Usage:  vicaris-status.sh [--final] [manifest]   (default: <this repo>/.vicaris/repos-<branch>.txt)
 #           --final  also require an MR and a clean tree in every repo with work;
@@ -68,6 +68,8 @@ while IFS=$'\t' read -r repo base role; do
     if [ "$final" -eq 1 ]; then
       [ "$dirty" -gt 0 ] && gap "UNCOMMITTED changes"
       [ "$mr" = no ] && gap "NO MR — this work never ships"
+    elif [ "$dirty" -gt 0 ]; then
+      note="${note:+$note · }uncommitted — fine mid-stage, not once a stage has ended"
     fi
   fi
   row "$name" "$role" "${base:--}" "$commits" "$dirty" "$verify" "$mr" "$note"
@@ -75,8 +77,9 @@ done < <(vm_list "$manifest")
 
 ledger="$primary/.vicaris/fix-ledger-$branch.md"
 if [ -f "$ledger" ]; then
-  printf '\nfix passes recorded: %s · outstanding: %s\n' \
-    "$(grep -ci '^## pass' "$ledger" || echo 0)" "$(grep -ci 'declined\|outstanding' "$ledger" || echo 0)"
+  printf '\nfix passes recorded: review %s · test %s · mr-review %s · outstanding: %s\n' \
+    "$(grep -ci '^## review pass' "$ledger" || true)" "$(grep -ci '^## test pass' "$ledger" || true)" \
+    "$(grep -ci '^## mr-review pass' "$ledger" || true)" "$(grep -ci 'declined\|outstanding\|not applied' "$ledger" || true)"
 fi
 
 for doc in design-challenge handover completion; do

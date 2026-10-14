@@ -40,9 +40,12 @@ and even then it finishes everything that is not blocked.
 What comes back is **the Record**:
 
 - one MR per repo, cross-linked under the same ticket, each already through the
-  standalone MR reviewer;
-- a completion doc per run: what changed, every assumption with the alternative
-  it beat and why, what was tested and what was not;
+  standalone MR reviewer, with the build and the review fix pass as separate
+  commits;
+- a completion doc per run that opens with what to check: the calls most worth a
+  second look, any behaviour changed beyond what the story names, what is still
+  outstanding and how big each MR is. Below that, what changed, every assumption with
+  the alternative it beat, and what was tested and what was not;
 - the design notes beside the code in each repo, and a ledger of every review
   finding with the decision taken on it.
 
@@ -55,13 +58,16 @@ What comes back is **the Record**:
    │                     rejected · gaps and contradictions · repos in scope ·
    │                     what the change could break · → RISK CLASS
    ├─ implement          design note per repo → design challenge (elevated+) →
-   │                     build in slices → tests → simplification pass
+   │                     one builder per repo: slices → tests → simplification
+   │                     pass → local commit
    ├─ gate               every repo's verify green · risk re-derived from the
    │                     paths actually touched · integrated smoke
    ├─ adversarial-review craft, architect and integration passes per repo, plus
-   │                     one acceptance-criteria pass over the whole change
+   │                     one acceptance-criteria pass over the whole change ·
+   │                     one fix pass, checked by the gate
    ├─ test               browser run of anything user-visible, logs and traces
-   └─ finalize           MR per repo · pipelines and MR review, waited on by the
+   └─ finalize           push, MR per repo · pipelines and MR review (the second
+                         review, over the fix pass too), waited on by the
                          orchestrator · completion doc · wrap-up
 ```
 
@@ -164,8 +170,8 @@ Every stage is also a standalone skill, so you can run one on its own.
 | | |
 |---|---|
 | **Skills** | `/vicaris` (the orchestrator), `/understand`, `/implement`, `/design-challenge`, `/adversarial-review`, `/test`, `/handover`, `/finalize` |
-| **References** | `autonomy` (the contract and standing resolutions) · `risk-classes` (what each class buys) · `gates` (what must be green, the two-pass cap) · `coding-principles` (the standard) · `delegation` (what runs in a sub-agent, on which model) · `design-note` (the eight questions asked before the first edit) · `multi-repo` (the manifest and per-repo invariants) · `notifications` (the Slack drumbeat) · `project-context.template` |
-| **Agents** | `analyst` (Opus 5.5, medium effort: understand) · `lead` (Opus 5.5, high effort: design and its challenge, review, deciding the MR review's findings) · `builder` (Sonnet 5.5, high effort: build, fix passes, test and finalize, at every class) · `review-runner` (Sonnet 5.5: runs `review-changes` for one repo, plumbing only) · `builder-opus` (Opus 5.5: repairs a stage that came back red) · `blind-designer` (Fable, read-only, no shell, so it cannot see the branch) · `acceptance-criteria` (Sonnet, read-only) |
+| **References** | `autonomy` (the contract and standing resolutions) · `risk-classes` (what each class buys) · `gates` (what must be green, one fix pass per review) · `coding-principles` (the standard) · `delegation` (what runs in a sub-agent, on which model) · `design-note` (the eight questions asked before the first edit) · `multi-repo` (the manifest and per-repo invariants) · `notifications` (the Slack drumbeat) · `project-context.template` |
+| **Agents** | `analyst` (Opus 5.5, medium effort: understand) · `lead` (Opus 5.5, high effort: design and its challenge, review, deciding the MR review's findings) · `builder` (Sonnet 5.5, high effort: the build, one per repo, fix passes, test and finalize, at every class) · `review-runner` (Sonnet 5.5: runs `review-changes` for one repo, plumbing only) · `builder-opus` (Opus 5.5: repairs a stage that came back red) · `blind-designer` (Fable, read-only, no shell, so it cannot see the branch) · `acceptance-criteria` (Sonnet, read-only) |
 | **Scripts** | `vicaris-risk.sh` (observed class, raise-only) · `vicaris-gate.sh` (records each repo's verify) · `vicaris-parity.sh` (every instance of a pattern, touched or not) · `vicaris-status.sh` (per-repo coverage) · `vicaris-manifest.sh` (the manifest reader: each repo's base and role, and what "changed" means) · `vicaris-wait.sh` (the orchestrator's waits on pipelines, eval jobs and detached reviewers, one line per result) · `mr-review-root.sh` · `browser-login-helper.sh` (keychain login that keeps passwords out of the model's context) |
 | **Hooks** | `SessionStart` re-injects the run's state; `PreCompact` warns when the handover doc is older than the run's latest commit, artifact or edit |
 

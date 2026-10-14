@@ -38,6 +38,13 @@ whole set.
 
 ## Step 1 — Publish: create and announce an MR for every repo
 
+The work is already committed: one commit per stage per repo, made locally as each
+stage ended (`references/multi-repo.md`, *Commits*). Publishing pushes those commits
+as they are, without squashing them, so the MR shows the build and the review fix
+pass apart. A repo with uncommitted work here is a stage that did not finish: commit
+it as that stage's commit only if its gate is current, otherwise re-run the gate
+first.
+
 Create (or refresh) an MR **in each `change` repo with work on the branch**, via the
 project's MR flow, targeting **that repo's manifest base** (`bash
 "${CLAUDE_PLUGIN_ROOT}/scripts/vicaris-manifest.sh" base "$repo"`, minus its `origin/`
@@ -47,8 +54,8 @@ prefix), never an assumed `main`. Every one of them:
 - **cross-links the sibling MRs** ("part of PROJ-1234, with <other MR>"), so no
   one approves half a contract change blind;
 - states the **merge order** if the MRs can't land in any order;
-- carries any **outstanding findings** the fix loop capped on, under a visible
-  heading (`references/gates.md`).
+- carries any **outstanding findings** the review fix pass left open, under a
+  visible heading (`references/gates.md`).
 
 Record each MR's URL where the status check reads it:
 
@@ -107,7 +114,9 @@ end the run.
 
 ## Step 3 — MR review, on every MR (the orchestrator)
 
-Run the standalone reviewer from `project-context.md` on **every MR at once**,
+This is the change's second review, and the only one over the review fix pass
+(`references/gates.md`, *Loop caps*). Run the standalone reviewer from
+`project-context.md` on **every MR at once**,
 detached, so no Bash timeout cuts a slow review off, then wait for all of them:
 
 ```bash
@@ -135,18 +144,22 @@ your own context; its verdict line is enough for the Slack ping.
 Ping the thread with each MR's verdict, and again once its comments are resolved.
 
 **Hand the verdicts to a short `lead` to decide** (`subagent_type: lead`, Opus 5.5):
-it gets each MR's review file and the ledger path, decides apply or decline for each
-finding with its reason in a new ledger section, and rewrites in place the
-design-note section any applied finding changes (`design-note.md`, *Keeping it
-current*). An applied finding can change a design decision, and that call is
-Opus's. A suggestion the local review already parked does not come back: the lead
-answers it with the ledger line that parked it.
+it gets each MR's review file, the ledger path, and each repo's review fix commit
+(the `<repo> commit:` line under the ledger's `## review pass 1`, if there is one). It
+decides apply or decline for each finding with its reason in the ledger's
+`## mr-review pass 1` section, marks a finding whose lines the review fix commit
+wrote with `· fix-pass code` (`git -C "$repo" blame` on the lines, or the commit's
+diff), and rewrites in place the design-note section any applied finding changes
+(`design-note.md`, *Keeping it current*). An applied finding can change a design
+decision, and that call is Opus's. A suggestion the local review already parked does
+not come back: the lead answers it with the ledger line that parked it. A finding
+that undoes a local fix is oscillation (`gates.md`).
 
 Then the fix: one `builder` per repo with findings to apply, spawned together, each
 applying its repo's findings, re-running its gate and the integrated path where the
-seam moved, committing and pushing. Then back to Step 2 for those repos, and this
-step again for their MRs only. **Two fix passes, then stop** (`references/gates.md`):
-what is still open is outstanding.
+seam moved, committing and pushing. Then back to Step 2 for those repos' pipelines.
+**One fix pass, and no second MR review** (`references/gates.md`): what is still
+open is outstanding.
 
 ## Step 4 — Wrap: completion document
 
@@ -158,14 +171,33 @@ Write **one** completion doc for the whole change at
 owner asks). Carry every line of `<primary-repo>/.vicaris/degraded-<branch>.txt`
 into it: what the run could not do is part of what it delivered.
 
+The doc exists to save the owner a review, so it is read top-down and most readers
+stop after its first section. A doc too long to read sends the owner back to the
+diff, and then it cost a stage and saved nothing.
+
+**Open with *What to check*,** one screen, before anything else:
+
+- **The calls most worth a second look**, at most three, ranked by how much
+  behaviour each would change if it were wrong: the reading of a criterion, a
+  contradiction resolved, a design choice. One line each: what was decided, the
+  alternative, and what changes if the alternative was right.
+- **Behaviour changed outside what the story names**: every entity, region, client
+  or path whose behaviour moves although the story does not mention it, or `none`.
+  A change that does more than it was asked to is the thing an MR reviewer finds
+  last and a rework costs most.
+- **Outstanding**: every finding still open, every pipeline still red, every check
+  that did not run, one line each.
+- **Size**: each MR's link with its files changed and lines added and removed.
+
 **Match its scope to the risk class** (`references/risk-classes.md`): `mechanical`
 covers what was threaded where, the parity result and the verify result; `tiny`
 adds the decisions; `normal` and above carry every section below; and `production`
 adds a rollback plan: how this is turned off, by whom, and whether it needs a deploy.
-Write each section once, as its content needs, from the artifacts it names, rather
-than restating the design notes or the ledger.
+Write each section once, as its content needs, from the artifacts it names, and
+point at the design notes, the challenge doc and the ledger rather than restating
+them; the owner can open those for the reasoning.
 
-Scannable sections:
+Then these sections:
 
 - **Summary of changes** — what was built, which files/modules, and why, keyed to
   the acceptance criteria, with the verify result and tests added. Group it **by
@@ -185,9 +217,9 @@ Scannable sections:
 - **Testing notes** — what was tested (unit + browser + traces/logs), what worked,
   what didn't (with evidence), carried over verbatim from the test stage.
 
-Before saving, clean the prose: connected sentences, varied length, no em dashes,
-no "it's not X, it's Y", no forced trios, no puffery, no stray one-sentence
-paragraphs. If the `byline` plugin is installed, run `/de-ai` over the doc instead.
+Write it plainly and save it. It is the owner's scratch record and nobody else
+reads it, so it gets no prose-cleaning pass; the text other people read (the MR
+descriptions, the Jira comment, the channel post) is where that care goes.
 
 Refresh each MR's description with any finding still outstanding after the MR-review
 loop, under the same visible heading as the review loop's.
@@ -207,9 +239,10 @@ With nothing in the sidecar, skip both silently.
 ## Step 6 — Slack summary (DM to the owner)
 
 Post the wrap-up to the Slack target (default self-DM) via
-`mcp__claude_ai_Slack__slack_send_message`: what shipped, the assumptions worth
-their eyes, the testing outcome, and **every MR link with its review result** (plus
-the merge order, if it matters). Thread it under the run's parent message with
+`mcp__claude_ai_Slack__slack_send_message`, leading with the completion doc's *What
+to check* (the calls worth a second look, behaviour changed outside the story, what
+is outstanding), then what shipped, the testing outcome, and **every MR link with
+its size and review result** (plus the merge order, if it matters). Thread it under the run's parent message with
 `reply_broadcast: true` (`references/notifications.md`). Draft it in the owner's
 voice (see `my-voice`); keep it tight.
 

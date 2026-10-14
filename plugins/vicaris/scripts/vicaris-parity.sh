@@ -30,8 +30,8 @@ repo="${1:-}"; pattern="${2:-}"; filter="${3:-}"
 base=$(vm_base "$repo")
 [ -n "$base" ] || { echo "no base resolved for $repo — cannot tell touched from untouched" >&2; exit 2; }
 
-# Committed or not: a parity check run before finalize commits anything would
-# otherwise report every instance untouched, new files included.
+# Committed or not: a parity check run before a stage has committed its work
+# would otherwise report every instance untouched, new files included.
 touched=$(vm_changed "$repo" "$base")
 
 if [ -n "$filter" ]; then

@@ -29,7 +29,7 @@ Ping at **every** milestone below, so a stalled run is noticeable.
 | **Implementation done, per repo** | One reply *per repo as it finishes* (`service-api (1/2) done — filter aggregation, 41 tests green`), not one summary at the end |
 | **Review started** | That the three reviewers are running, and over which repos |
 | **Review findings** | Counts by severity, plus the headline of anything non-trivial |
-| **Review comments resolved** | What was fixed and that verify is green again. If a loop hits its two-pass cap, say so with what is outstanding |
+| **Review comments resolved** | What was fixed and that verify is green again. If anything is still outstanding after the fix pass, say what |
 | **Testing started** | Units first, then whether the browser pass is happening or is being skipped (and why) |
 | **Testing done** | What was tested, what worked, what didn't, evidence for failures |
 | **MR raised, per repo** | The MR link as each one goes up, rather than all of them at the end |

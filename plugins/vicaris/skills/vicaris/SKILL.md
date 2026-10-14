@@ -145,7 +145,9 @@ The `implement` skill runs in two sub-agents:
 1. **Design** — `lead` runs its Steps 1–2c: the Step 1 rules and every repo's design
    note to disk, then the `design-challenge` skill, which spawns its own two agents
    and amends the notes where a divergence is adopted.
-2. **Build** — you spawn `builder` per its Step 2d, and check its verify files and note amendments before the gate.
+2. **Build** — you spawn one `builder` per `change` repo, in dependency order, per its
+   Step 2d, and check each repo's verify file, its commit and any note amendments
+   before the gate.
 
 **Decision requests.** A builder that reaches a choice the design note does not
 settle (a contract shape, behaviour the note does not describe, a criterion read
@@ -176,8 +178,7 @@ bash "${CLAUDE_PLUGIN_ROOT}/scripts/vicaris-risk.sh" \
   --write "$PRIMARY/.vicaris/risk-$BRANCH.txt"
 ```
 
-Both see uncommitted work, so they are meaningful before anything is committed.
-Exit 3: the class rose and the file is updated. Say so in the thread and run what the
+Both read the branch's commits and anything left uncommitted. Exit 3: the class rose and the file is updated. Say so in the thread and run what the
 new class earns, including a late design challenge. Exit 4: nothing observed; keep
 the predicted class and say the check did not run. The risk file keeps the
 prediction's tags and reason and adds an `observed:` line, so a later stage reads both.
@@ -201,8 +202,9 @@ the run. So every agent below is short, starts with its inputs already on disk, 
 never waits on another. `adversarial-review`'s *Who runs what* says what each one
 does; this is the order.
 
-1. **Set up** (its Step 1, yourself): stage each `change` repo, take the stat, make
-   `<primary>/.vicaris/review/pass-<N>/`. Read the class from the risk file.
+1. **Set up** (its Step 1, yourself): confirm each `change` repo's work is committed,
+   take the stat, make `<primary>/.vicaris/review/pass-1/`. Read the class from the
+   risk file.
 2. **Review.** One `review-runner` per `change` repo with changes, with the class's
    invocation (its Step 2). With the first runner, in the same message: the
    `acceptance-criteria` agent where the class earns it (its Step 3), and, when the
@@ -214,18 +216,18 @@ does; this is the order.
    with the pass directory, the ledger, every repo's design notes and the design
    challenge. It writes the review doc, this pass's ledger section and any note
    amendments, and reports per repo how many findings are `apply`.
-4. **Fix.** If any are, and fewer than two fix passes have run: one `builder` per repo
-   with findings, all in one message, each given its repo, the ledger path and the
-   pass number. Each applies its lines, re-runs its gate and the contract tests if
-   the seam moved, and marks the lines. Then `vicaris-gate.sh --check` each; a red
-   repo goes to `builder-opus`.
-5. **Re-review** after the first fix pass: back to 2 with `N=2`, for the repos that
-   pass changed. After the second fix pass, the gate only: there is no third review,
-   and what is still open is outstanding (`gates.md`, *At the cap*). The decider
-   naming an oscillation stops the loop early.
+4. **Fix, once.** If any are, and the ledger has no `## review pass 1` results yet:
+   one `builder` per repo with findings, all in one message, each given its repo and
+   the ledger path. Each applies its lines, re-runs its gate and the contract tests
+   if the seam moved, marks the lines, commits the pass as its own commit and records
+   it in the ledger (`gates.md`, *The ledger*). Then
+   `vicaris-gate.sh --check` each; a red repo goes to `builder-opus`.
+5. **No re-review.** The gate is what checks the fix pass here, and the MR review in
+   Step 5 is the second review, over the pushed change with the fix commit in it
+   (`gates.md`, *Loop caps*). What the builders did not apply is outstanding.
 
-Count passes from the ledger's sections, not from memory, so a compaction cannot
-reset the cap. Ping the thread when the review lands and when the loop ends, and
+Count passes from the ledger's headings, not from memory, so a compaction cannot
+re-run a pass. Ping the thread when the review lands and when the fix pass ends, and
 refresh the handover doc then.
 
 ## Step 4 — Test
@@ -248,9 +250,10 @@ continue with the rest. Refresh the handover doc when it returns.
    script wrote, an eval that moved to a short `lead` first.
 3. **MR review** — its Step 3, yourself: every MR's reviewer started at once with
    `vicaris-wait.sh start`, waited for with `files`, then a short `lead` decides from
-   the review files and a `builder` per repo fixes and pushes; back to 2 for those
-   repos. Two fix passes, then outstanding. A finding the local review already
-   parked is answered with its ledger line, not relitigated.
+   the review files and the review fix commits, and a `builder` per repo fixes,
+   commits and pushes; back to 2 for those repos' pipelines. One fix pass and no
+   second MR review; what is still open is outstanding. A finding the local review
+   already parked is answered with its ledger line, not relitigated.
 4. **Wrap** — spawn `builder` for its Steps 4–7: the completion doc, written now
    that every result it reports exists, the Jira and Confluence updates, the Slack
    wrap-up, and stopping the keep-awake.
@@ -279,7 +282,7 @@ see it. Compaction is automatic but lossy, and the handover doc is what survives
 
 Refresh it now, and say so in the thread, when any of these fire:
 
-- the review fix loop or the MR-review loop reaches its cap
+- a review or MR-review fix pass leaves findings outstanding
 - a verification loop (evals, CI, browser) reaches a third iteration
 - every stage has run and the task is still not finished
 
@@ -291,7 +294,10 @@ in Slack and the terminal and give the resume command.
 - Keep a running list of decisions and assumptions for the completion doc.
 - Scratch docs are the owner's working material: never commit or cite them. They
   live in the primary repo.
+- Code is committed locally at every stage boundary and pushed only by finalize
+  (`multi-repo.md`, *Commits*).
 - Use `git -C "$repo"`, not `cd`, and tag every file, finding and result with its
   repo name.
 - Before declaring any stage complete, run `scripts/vicaris-status.sh`. It counts
-  uncommitted work as work and a verify result about older code as stale.
+  uncommitted work as work, flags work a finished stage left uncommitted, and calls a
+verify result about older code stale.

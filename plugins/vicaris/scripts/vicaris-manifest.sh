@@ -21,10 +21,11 @@
 #   - The base is per repo. A deployment repo cut from origin/us-qa and diffed
 #     against origin/HEAD shows every commit on us-qa that main lacks, and the risk
 #     check then tags someone else's pricing and RBAC files as this change's.
-#   - Work is not only commits. Nothing commits until finalize, so a check that
-#     reads `base...HEAD` sees nothing before then, and a new file is invisible to
-#     `git diff` until it is staged. Changed files here are the merge-base against
-#     the working tree, staged, unstaged and untracked alike.
+#   - Work is not only commits. Each stage commits when it ends, but a stage still
+#     running, or one that stopped short, has work only in the tree, and a new file
+#     is invisible to `git diff` until it is staged. Changed files here are the
+#     merge-base against the working tree: commits, staged, unstaged and untracked
+#     alike.
 #
 # Usage as a command (sourcing it gives the same functions, prefixed vm_):
 #   vicaris-manifest.sh list <manifest-or-repo> [change|read|all]   path TAB base TAB role
@@ -108,8 +109,8 @@ vm_commits() {
 
 # What a verify result is a result about: the content of the working tree, as the
 # git tree hash it would have if every change, untracked files included, were
-# committed. It is content only, so committing the verified tree (which finalize
-# does) leaves it unchanged, and any edit to the code changes it. Computed through a
+# committed. It is content only, so committing the verified tree (which every
+# stage does as it ends) leaves it unchanged, and any edit to the code changes it. Computed through a
 # scratch copy of the index, so the real index and staging are never touched.
 vm_fingerprint() {
   local repo="$1" dir idx tree

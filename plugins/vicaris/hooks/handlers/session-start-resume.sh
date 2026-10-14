@@ -74,8 +74,9 @@ fi
 
   [ -f "$understanding" ] && printf 'Understanding (acceptance criteria + the readings rejected): `%s`\n' "$understanding"
   if [ -f "$ledger" ]; then
-    printf 'Fix ledger: `%s` — %s pass(es) recorded. The loop cap is two; a cap reset by a compaction is not a cap.\n' \
-      "$ledger" "$(grep -ci '^## pass' "$ledger" 2>/dev/null || echo 0)"
+    printf 'Fix ledger: `%s` — passes recorded: review %s, test %s, mr-review %s. Review and MR review get one fix pass each, test two; a pass already recorded is not run again.\n' \
+      "$ledger" "$(grep -ci '^## review pass' "$ledger" 2>/dev/null || true)" \
+      "$(grep -ci '^## test pass' "$ledger" 2>/dev/null || true)" "$(grep -ci '^## mr-review pass' "$ledger" 2>/dev/null || true)"
   fi
   [ -f "$thread" ] && printf 'Slack thread ts: `%s` (thread every ping under it)\n' "$(cat "$thread" 2>/dev/null)"
   printf '\nContext was just compacted or resumed, so detail has been summarised away. Do not re-derive\n'

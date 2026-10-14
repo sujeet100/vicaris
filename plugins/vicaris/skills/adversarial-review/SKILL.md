@@ -32,11 +32,12 @@ context is the smallest in the run.
 | Reviewers, one `review-changes` per repo | `review-runner` (Sonnet 5.5; the passes it launches pin their own models) | 2 |
 | The acceptance-criteria pass, and the seam where needed | `acceptance-criteria`; a `lead` for the seam | 2b, 3 |
 | Deciding: parity, synthesis, the ledger, the notes | one `lead` (Opus 5.5), spawned once every reviewer has reported | 2a, 4–6 |
-| Fix passes and the re-review | the orchestrator spawns them (`vicaris` Step 3) | — |
+| The one fix pass | the orchestrator spawns it (`vicaris` Step 3) | — |
 
-Each pass of the loop writes under `<primary-repo>/.vicaris/review/pass-<N>/` (`N`
-is 1 for the review, 2 for the re-review), one file per reviewer, so the decider
-reads files rather than reports and a resumed session can see what ran.
+The review writes under `<primary-repo>/.vicaris/review/pass-1/`, one file per
+reviewer, so the decider reads files rather than reports and a resumed session can
+see what ran. There is no second local round: the gate checks the fix pass, and the
+MR review is the second review (`references/gates.md`, *Loop caps*).
 
 ## Step 1 — Establish the change, not the repo
 
@@ -51,18 +52,18 @@ VM="${CLAUDE_PLUGIN_ROOT}/scripts/vicaris-manifest.sh"
 bash "$VM" list "$MANIFEST" change | while IFS= read -r line; do
   repo=$(printf '%s' "$line" | cut -f1); BASE=$(printf '%s' "$line" | cut -f2)
   git -C "$repo" fetch --prune origin
-  git -C "$repo" add -A                       # new files into the index; never commit
-  git -C "$repo" diff "$(git -C "$repo" merge-base "$BASE" HEAD)" --stat
+  git -C "$repo" status --porcelain           # must be empty: the build committed
+  git -C "$repo" diff "$BASE"...HEAD --stat
 done
 ```
 
 The base is each repo's manifest base, the branch its MR targets, never the local
-branch and not necessarily the remote default. The diff runs from the merge-base to
-the working tree, because nothing is committed until finalize: `base...HEAD` would
-show an empty change. Staging first matters for the same reason, since every
-`--base` diff a reviewer takes skips untracked files, and a new module the build
-added would otherwise go unreviewed. `$ARGUMENTS` may override `BASE`. `read` repos
-are context for the reviewers, not a diff to review.
+branch and not necessarily the remote default. Every builder commits its repo when
+its gate is green (`multi-repo.md`, *Commits*), so the change is `base...HEAD`. A repo
+with uncommitted work at this point is a build that did not finish: send it back to
+its builder rather than reviewing a tree a reviewer's `--base` diff would only partly
+see. `$ARGUMENTS` may override `BASE`. `read` repos are context for the reviewers,
+not a diff to review.
 
 **Do not read the diffs into this context** — every reviewer fetches its own. The
 acceptance criteria come from the understanding, which quotes them verbatim; Step 3
@@ -109,7 +110,7 @@ agents. Keep findings tagged with the repo name — the fix pass routes by that 
 
 **Keep the reducer's JSON, not only its prose.** The runner copies
 `/tmp/review-merged.json` and `/tmp/review-merged.txt` to
-`review/pass-<N>/<repo>.json` and `.txt` before the next run overwrites them: the
+`review/pass-1/<repo>.json` and `.txt` before the next run overwrites them: the
 JSON carries every finding by id with severity, quotes and location, plus a
 `dropped` array of what the caps suppressed. The fix pass and
 ledger need that structure, and the `dropped` list answers "was this considered"
@@ -147,12 +148,11 @@ the `normal` invocation instead.
 
 ### Step 2b — Fallback when `review-changes` is unavailable
 
-The orchestrator spawns three `lead` sub-agents (opus, high effort) in a single message, each writing to `review/pass-<N>/<role>.md` and getting instructions rather
+The orchestrator spawns three `lead` sub-agents (opus, high effort) in a single message, each writing to `review/pass-1/<role>.md` and getting instructions rather
 than content: the repo list with paths and manifest `BASE`, the changed-file stat,
 and the paths to `${CLAUDE_PLUGIN_ROOT}/references/coding-principles.md`,
 `references/multi-repo.md` and `project-context.md`. Each pulls its own diffs
-(`git -C "$repo" diff "$(git -C "$repo" merge-base "$BASE" HEAD)"`, which covers
-committed, staged and unstaged work) across **every** `change` repo.
+(`git -C "$repo" diff "$BASE"...HEAD`) across **every** `change` repo.
 
 - **Clean-code reviewer** — grade against `coding-principles.md` *and the repo's own convention
   docs* (whatever `project-context.md` names, or the coding and testing conventions under
@@ -175,7 +175,7 @@ the whole change with `subagent_type: acceptance-criteria` (shipped in `agents/`
 pinned to Sonnet 5.5). With no definition, use `general-purpose` on `model: sonnet`.
 
 Give it the repo list with each base, the understanding's path for the criteria,
-and `review/pass-<N>/acceptance.md` as the one file it writes; it pulls the diffs
+and `review/pass-1/acceptance.md` as the one file it writes; it pulls the diffs
 itself. Point it at `<mr-review>/charter/stage_po.md` (resolve with
 `bash "${CLAUDE_PLUGIN_ROOT}/scripts/mr-review-root.sh"`) rather than restating it.
 Without the charter, tell it to classify the change FULL or PARTIAL, map every
@@ -202,8 +202,7 @@ the merge order.
 
 Merge, de-duplicate, and resolve contradictions, saying which reviewer you sided
 with and why. Write the review doc to `<primary-repo>/.vicaris/review-<branch>.md`
-(the re-review updates it in place) in the owner's preferred shape — scratch, don't
-commit it:
+in the owner's preferred shape — scratch, don't commit it:
 
 - **Repos reviewed** — each repo with its diffstat and which passes ran on it, so it is obvious
   nothing was skipped (one line; omit for a single-repo change).
@@ -234,22 +233,20 @@ Before handing anything over, take every decided finding that changes a design
 decision (a rule, a contract's shape, an accepted limit, new behaviour the note does
 not describe) and rewrite the section of that repo's note that states it, in place
 (`design-note.md`, *Keeping it current*). You hold the decision; the builder carries
-it out, and a decision formed inside a fix pass is what a re-review then has to
-repair.
+it out, and with no review over the fix pass, a decision formed inside it would ship
+unexamined.
 
-Then write the fix list as this pass's section of the ledger at
+Then write the fix list as the ledger's `## review pass 1` section at
 `<primary>/.vicaris/fix-ledger-<branch>.md` (`${CLAUDE_PLUGIN_ROOT}/references/gates.md`),
 grouped by repo, blockers and should-fixes first and the suggestions you decided to
 apply last, each line `apply` or `declined — reason`. A suggestion not worth a line
-of the builder's time goes under *Skip for now*, not into the list. On the
-re-review, answer a finding the first pass already decided with that pass's line
-instead of deciding it again, and name any fix that reverses one from the previous
-pass: that is oscillation, it stops the loop, and it wants a human eye.
+of the builder's time goes under *Skip for now*, not into the list. There is one fix
+pass and nothing reviews it but the gate, so an `apply` should be a change the
+builder can make without deciding anything.
 
-Do not spawn the builders. Report, per repo, how many findings are `apply`, and
-whether you saw oscillation. The orchestrator spawns one `builder` per repo with
-the ledger path, so no single agent carries the whole list through a growing
-context, and none of them waits on another.
+Do not spawn the builders. Report, per repo, how many findings are `apply`. The
+orchestrator spawns one `builder` per repo with the ledger path, so no single agent
+carries the whole list through a growing context, and none of them waits on another.
 
 ## Deciding, not asking
 
